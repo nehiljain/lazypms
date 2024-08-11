@@ -12,7 +12,7 @@ import os
 # Initialize the Slack client and app
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
-GITHUB_PA_TOKEN = os.environ.get("GITHUB_PA_TOKEN")
+GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN")
 
 # if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
 #     raise ValueError("SLACK_BOT_TOKEN and SLACK_APP_TOKEN must be set in environment variables")
@@ -131,13 +131,7 @@ def github_release_data_tool(input: str) -> str:
         #repo_name = input_data['repo']
         release_id = input_data['release_id']
 
-        g = Github(GITHUB_PA_TOKEN)
-
-        #real repo
-        repo = g.get_repo('langchain-ai/langchain')
-
-        #fake repo
-        fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
+        
 
         # Check if the output file exists
         output_file = f"{release_id}.json"
@@ -145,6 +139,14 @@ def github_release_data_tool(input: str) -> str:
             print("found cached response file for release_id", release_id)
             with open(output_file, 'r') as file:
                 return file.read()
+            
+        g = Github(GITHUB_ACCESS_TOKEN)
+
+        #real repo
+        repo = g.get_repo('langchain-ai/langchain')
+
+        #fake repo
+        fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
 
         # Fetch the specific release
         release = repo.get_release(release_id)
