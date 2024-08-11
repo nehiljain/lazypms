@@ -138,6 +138,12 @@ def github_release_data_tool(input: str) -> str:
         #fake repo
         fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
 
+        # Check if the output file exists
+        output_file = f"{release_id}.json"
+        if os.path.exists(output_file):
+            with open(output_file, 'r') as file:
+                return file.read()
+
         # Fetch the specific release
         release = repo.get_release(release_id)
 
@@ -182,6 +188,10 @@ def github_release_data_tool(input: str) -> str:
             except GithubException:
                 # If we can't fetch the issue/PR, we'll skip it
                 continue
+
+        # Cache the output to a local file
+        with open(output_file, 'w') as file:
+            file.write(json.dumps(data, indent=2))
 
         return json.dumps(data, indent=2)
 
@@ -442,6 +452,7 @@ from langchain.callbacks import StdOutCallbackHandler
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
 from datetime import datetime, timedelta
+import pickle
 
 class ExceptionHandlerModelUpdaterInput(BaseModel):
     input: str = Field(description='A string that can be parsed to a dictionary containing "query" and optionally "feedback". Example: {"query": "What is the capital of France?", "feedback": "The answer was correct and helpful."}')
