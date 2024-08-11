@@ -32,7 +32,7 @@ class Config:
 
 # Initialize the language model
 anth_api_key = os.environ['ANTHROPIC_API_KEY']
-llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-5-sonnet-20240620')
+llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-5-sonnet-20240620', max_tokens_to_sample=4000)
 # llm = ChatFireworks(
 #     api_key=os.getenv("FIREWORKS_API_KEY"),
 #     model="accounts/fireworks/models/llama-v3p1-70b-instruct"
@@ -55,7 +55,7 @@ agent5 = create_react_agent(llm, agent5_tools, agent5_prompt)
 # Create agent executors
 agent1_executor = AgentExecutor(agent=agent1, tools=agent1_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
-agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=5)
 agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 agent5_executor = AgentExecutor(agent=agent5, tools=agent5_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 
