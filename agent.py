@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_anthropic import ChatAnthropic
-from tools import slack_api_tool, github_data_tool, github_analyzer_tool, human_feedback_interface, process_analytics_optimizer, exception_handler_model_updater
+from tools import slack_api_tool, github_release_data_tool, github_analyzer_tool, human_feedback_interface, process_analytics_optimizer, exception_handler_model_updater
 from context import slack_communication_guidelines, audience_specific_examples, release_notes_best_practices_tool, internal_review_guidelines, system_architecture_docs
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
@@ -35,12 +35,12 @@ class Config:
 # llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
 llm = ChatFireworks(
     api_key=os.getenv("FIREWORKS_API_KEY"),
-    model="accounts/fireworks/models/llama-v3p1-8b-instruct"
+    model="accounts/fireworks/models/llama-v3p1-70b-instruct"
 )
 
 # Define tools for each agent
-agent1_tools = []
-agent2_tools = [github_data_tool]
+agent1_tools = [slack_api_tool] #slack_communication_guidelines, slack_api_tool
+agent2_tools = [github_release_data_tool]
 agent3_tools = [github_analyzer_tool, audience_specific_examples, release_notes_best_practices_tool]
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
 agent5_tools = [process_analytics_optimizer, exception_handler_model_updater, system_architecture_docs]
@@ -53,11 +53,11 @@ agent4 = create_react_agent(llm, agent4_tools, agent4_prompt)
 agent5 = create_react_agent(llm, agent5_tools, agent5_prompt)
 
 # Create agent executors
-agent1_executor = AgentExecutor(agent=agent1, tools=agent1_tools, verbose=True, handle_parsing_errors=True)
-agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True)
-agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True)
-agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True)
-agent5_executor = AgentExecutor(agent=agent5, tools=agent5_tools, verbose=True, handle_parsing_errors=True)
+agent1_executor = AgentExecutor(agent=agent1, tools=agent1_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent5_executor = AgentExecutor(agent=agent5, tools=agent5_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 
 # Define the StateGraph
 from typing import TypedDict
@@ -129,7 +129,7 @@ def process_management_optimization_node(state: ReleaseNoteState) -> Dict[str, A
 workflow = StateGraph(ReleaseNoteState)
 
 # Add nodes
-# workflow.add_node("slack_interaction", slack_interaction_node)
+#workflow.add_node("slack_interaction", slack_interaction_node)
 workflow.add_node("github_data_retrieval", github_data_retrieval_node)
 workflow.add_node("data_analysis_content_generation", data_analysis_content_generation_node)
 workflow.add_node("human_interaction_feedback", human_interaction_feedback_node)
@@ -143,14 +143,14 @@ def needs_revision(state: ReleaseNoteState) -> str:
     return "revise" if state["human_feedback"] and "revision_needed" in state["human_feedback"].lower() else "finalize"
 
 # Add edges
-workflow.add_conditional_edges(
-    # "slack_interaction",
-    is_release_note_query,
-    {
-        "continue": "github_data_retrieval",
-        "end": END
-    }
-)
+# workflow.add_conditional_edges(
+#     "slack_interaction",
+#     is_release_note_query,
+#     {
+#         "continue": "github_data_retrieval",
+#         "end": END
+#     }
+# )
 workflow.add_edge("github_data_retrieval", "data_analysis_content_generation")
 workflow.add_edge("data_analysis_content_generation", "human_interaction_feedback")
 workflow.add_conditional_edges(
@@ -164,7 +164,7 @@ workflow.add_conditional_edges(
 workflow.add_edge("process_management_optimization", END)
 
 # Set entry point
-# workflow.set_entry_point("slack_interaction")
+#workflow.set_entry_point("slack_interaction")
 workflow.set_entry_point("github_data_retrieval")
 
 # Compile the graph
@@ -184,20 +184,20 @@ def main():
         "process_metrics": {}
     }
 
-    while True:
-        try:
-            # new_messages = slack_api_tool.get_new_messages()
-            new_messages = ["Please generate release notes for the latest release https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-core%3D%3D0.2.0"]
-            for message in new_messages:
-                if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
-                    initial_state["input"] = message
-                    for step in graph.stream(initial_state):
-                        print(f"Step: {step}")
-                        if "final_release_notes" in step and step["final_release_notes"]:
-                            print(step["final_release_notes"])
-                            slack_api_tool.send_message(step["final_release_notes"])
-        except Exception as e:
-            logger.error(f"Error in main loop: {str(e)}")
-        
+    #while True:
+    try:
+        # new_messages = slack_api_tool.get_new_messages()
+        new_messages = ["Please generate release notes for the latest release https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-core%3D%3D0.2.0"]
+        for message in new_messages:
+            if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
+                initial_state["parsed_request"] = message
+                for step in graph.stream(initial_state):
+                    print(f"Step: {step}")
+                    if "final_release_notes" in step and step["final_release_notes"]:
+                        print(step["final_release_notes"])
+                        slack_api_tool.send_message(step["final_release_notes"])
+    except Exception as e:
+        logger.error(f"Error in main loop: {str(e)}")
+    
 if __name__ == "__main__":
     main()
