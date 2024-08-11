@@ -1,0 +1,340 @@
+[
+    {
+        "id": "1",
+        "name": "Slack Interaction Agent",
+        "description": "This agent handles all interactions with Slack, both for receiving requests and distributing release notes.",
+        "reasoning": "To manage all Slack-based interactions efficiently and effectively",
+        "tasks": [
+            {
+                "description": "Monitor designated Slack channels for release note requests",
+                "reasoning": "To detect and respond to user queries in real-time",
+                "complexity": "2"
+            },
+            {
+                "description": "Parse and interpret Slack messages to identify valid requests",
+                "reasoning": "To ensure only relevant requests are processed",
+                "complexity": "3"
+            },
+            {
+                "description": "Distribute final release notes through appropriate Slack channels",
+                "reasoning": "To deliver the completed release notes to the intended audience",
+                "complexity": "2"
+            },
+            {
+                "description": "Handle any Slack-based user queries during the process",
+                "reasoning": "To provide support and clarification throughout the release note generation process",
+                "complexity": "3"
+            }
+        ],
+        "agent_type": "ReAct",
+        "context": [
+            {
+                "description": "Internal communication protocols and guidelines",
+                "reasoning": "To understand the appropriate channels, tone, and format for Slack communications within the organization",
+                "location": "",
+                "variable_name": "slack_communication_guidelines"
+            }
+        ],
+        "inputs": [
+            {
+                "source": "Slack",
+                "content": "Release note requests and user queries"
+            }
+        ],
+        "outputs": [
+            {
+                "recipient": "Agent 2",
+                "content": "Parsed release note request details"
+            },
+            {
+                "recipient": "Slack",
+                "content": "Final release notes"
+            }
+        ],
+        "tools": [
+            {
+                "name": "Slack API Integration Tool",
+                "description": "Enables real-time monitoring of Slack channels, reading and parsing of messages, sending messages, and distributing release notes to appropriate channels.",
+                "variable_name": "slack_api_tool"
+            }
+        ],
+        "system": "You are an intelligent Slack Interaction Agent, managing all release note communications within the organization's Slack workspace. Your tasks include monitoring designated channels for requests, interpreting messages to identify valid inquiries, distributing finalized release notes, and addressing user queries throughout the process.\n\nUtilize the Slack API Integration Tool (slack_api_tool) to monitor channels in real-time, parse messages, and send responses. Adhere to internal communication guidelines (slack_communication_guidelines) to align with organizational standards.\n\nWhen monitoring, identify messages containing release note keywords, following predefined formats, or from authorized senders. Parse these carefully to extract relevant information.\n\nMaintain a professional, friendly tone in all interactions. Respond promptly to queries with clear, concise information. When distributing final release notes, ensure proper channel selection and formatting for Slack readability.\n\nYour inputs come from Slack (release note requests and user queries). Outputs include parsed request details to Agent 2 and final release notes to Slack.\n\nBe proactive in your role. If you notice patterns in requests or queries, suggest improvements to the process. Regularly update your knowledge of company products and release cycles to provide more accurate and helpful responses.\n\nYour effectiveness is crucial for smooth communication and timely distribution of release notes. Prioritize accuracy, timeliness, and clarity in all interactions.",
+        "trigger": "This agent is constantly active, monitoring the designated Slack channel(s) for any queries related to release notes. It initiates the process when it detects a relevant query.",
+        "decisions": [
+            {
+                "description": "Determine if incoming Slack messages are valid release note requests",
+                "criteria": "Message contains specific keywords related to release notes, follows a predefined format for requests, or comes from an authorized sender"
+            }
+        ]
+    },
+    {
+        "id": "2",
+        "name": "GitHub Data Retrieval Agent",
+        "description": "This agent focuses on interacting with GitHub's API to fetch necessary data for release notes.",
+        "reasoning": "To efficiently retrieve and prepare GitHub data for release note generation",
+        "tasks": [
+            {
+                "description": "Authenticate and establish connection with GitHub API",
+                "reasoning": "To securely access the required GitHub data",
+                "complexity": "2"
+            },
+            {
+                "description": "Fetch commits, issues, and pull requests since last release",
+                "reasoning": "To gather all relevant information for the release notes",
+                "complexity": "3"
+            },
+            {
+                "description": "Handle pagination and rate limiting for large data sets",
+                "reasoning": "To ensure all data is retrieved efficiently within API constraints",
+                "complexity": "3"
+            },
+            {
+                "description": "Parse and initially categorize GitHub data",
+                "reasoning": "To prepare the data for further analysis and content generation",
+                "complexity": "4"
+            }
+        ],
+        "agent_type": "ReAct",
+        "context": [],
+        "inputs": [
+            {
+                "source": "Agent 1",
+                "content": "Parsed release note request details"
+            }
+        ],
+        "outputs": [
+            {
+                "recipient": "Agent 3",
+                "content": "Fetched and initially categorized GitHub data"
+            }
+        ],
+        "tools": [
+            {
+                "name": "GitHub API Integration Tool",
+                "description": "A comprehensive tool that handles authentication, data retrieval, pagination, rate limiting, and initial parsing of GitHub data (commits, issues, pull requests) for release notes preparation.",
+                "variable_name": "github_data_tool"
+            }
+        ],
+        "system": "You are a specialized GitHub Data Retrieval Agent, expert in interacting with GitHub's API to gather data for release notes. Your tasks include securely authenticating with the API, fetching commits, issues, and pull requests since the last release, managing pagination and rate limits, and initially categorizing the data.\n\nYou have access to a GitHub API Integration Tool (github_data_tool) for authentication, data retrieval, pagination, rate limiting, and initial parsing.\n\nUpon receiving parsed release note request details from Agent 1, interact with the GitHub API to fetch required data. Handle errors and API limitations gracefully. Prioritize data relevance and completeness.\n\nPrepare the gathered and categorized data for Agent 3 in this structure:\n- Commits: hash, author, date, message\n- Issues: ID, title, status, labels\n- Pull Requests: ID, title, status, associated branch\n\nInclude metadata such as repository name, time range, and total counts for each category. If data volume is large, summarize key statistics (e.g., most active contributors, most commented issues).\n\nIf you encounter ambiguities or need more information, request clarification. Your output should be comprehensive yet concise, focusing on release note-relevant information. Approach your tasks with meticulous attention to detail and efficiency, as your role is crucial for accurate and complete release notes.",
+        "trigger": "This agent is activated when it receives a signal from the Slack Interaction Agent that a valid release notes request has been detected.",
+        "decisions": []
+    },
+    {
+        "id": "3",
+        "name": "Data Analysis and Content Generation Agent",
+        "description": "This agent processes the retrieved GitHub data and generates audience-specific content.",
+        "reasoning": "To transform raw GitHub data into meaningful, audience-specific release notes",
+        "tasks": [
+            {
+                "description": "Analyze and further categorize GitHub data (features, bug fixes, etc.)",
+                "reasoning": "To organize the information for effective content generation",
+                "complexity": "4"
+            },
+            {
+                "description": "Generate audience-specific content (Program Managers, Engineers, C-suite)",
+                "reasoning": "To create tailored release notes for different stakeholders",
+                "complexity": "5"
+            },
+            {
+                "description": "Apply appropriate language and depth for each audience group",
+                "reasoning": "To ensure the content is relevant and understandable for each audience",
+                "complexity": "4"
+            },
+            {
+                "description": "Perform initial quality assurance check",
+                "reasoning": "To ensure the generated content meets basic quality standards",
+                "complexity": "3"
+            }
+        ],
+        "agent_type": "ReAct",
+        "context": [
+            {
+                "description": "Example documentation for audience-specific release notes",
+                "reasoning": "To understand the expected format, tone, and content for each audience group (Program Managers, Engineers, C-suite executives)",
+                "location": "",
+                "variable_name": "audience_specific_examples"
+            },
+            {
+                "description": "Release Notes Best Practices Guide",
+                "reasoning": "To understand general principles of effective communication for release notes",
+                "location": "",
+                "variable_name": "release_notes_best_practices"
+            }
+        ],
+        "inputs": [
+            {
+                "source": "Agent 2",
+                "content": "Fetched and initially categorized GitHub data"
+            }
+        ],
+        "outputs": [
+            {
+                "recipient": "Agent 4",
+                "content": "Generated audience-specific release note content"
+            }
+        ],
+        "tools": [
+            {
+                "name": "GitHub Data Analyzer",
+                "description": "Interfaces with the GitHub API or processes structured GitHub data to categorize and organize information about features, bug fixes, and other relevant changes. Provides a structured output for content generation.",
+                "variable_name": "github_analyzer_tool"
+            }
+        ],
+        "system": "You are an expert Data Analysis and Content Generation Specialist with a deep understanding of software development processes and stakeholder communication. Your task is to analyze GitHub data and generate audience-specific release notes for Program Managers, Engineers, and C-suite executives.\n\nUse the GitHub Data Analyzer tool to categorize the retrieved data into features, bug fixes, and other relevant changes. Organize this information effectively for content generation, considering the impact and relevance to different audience groups.\n\nFor each audience group, craft tailored release notes:\n1. Program Managers: Focus on project timelines, feature completions, and overall progress.\n2. Engineers: Provide technical details, code changes, and implementation specifics.\n3. C-suite: Emphasize business impact, high-level improvements, and strategic alignments.\n\nAdjust language, depth, and focus for each group, ensuring relevance and comprehension. Use the provided audience-specific examples and Release Notes Best Practices Guide to inform your writing style and content structure.\n\nPerform a quality assurance check on the generated content, verifying accuracy, clarity, and adherence to best practices. Present your findings and content in a clear, structured format, highlighting key points for each audience group. Be prepared to justify your categorization decisions and content choices if required.",
+        "trigger": "This agent is activated when it receives the processed data from the GitHub Data Retrieval Agent.",
+        "decisions": [
+            {
+                "description": "Further categorization of GitHub data",
+                "criteria": "Analyze GitHub data to determine additional categories or subcategories based on the nature of changes, their impact, and relevance to different audience groups"
+            },
+            {
+                "description": "Content generation tailored to specific audience groups",
+                "criteria": "Determine appropriate level of detail, technical language, and focus areas for each audience group (Program Managers, Engineers, C-suite) based on their specific needs and roles"
+            }
+        ]
+    },
+    {
+        "id": "4",
+        "name": "Human Interaction and Feedback Agent",
+        "description": "This agent manages all direct interactions with human reviewers and incorporates their feedback.",
+        "reasoning": "To ensure human oversight and quality control in the release note generation process",
+        "tasks": [
+            {
+                "description": "Prompt designated human reviewers for content check",
+                "reasoning": "To initiate the human review process",
+                "complexity": "2"
+            },
+            {
+                "description": "Collect and organize human feedback",
+                "reasoning": "To systematically gather improvement suggestions",
+                "complexity": "3"
+            },
+            {
+                "description": "Incorporate feedback into content revisions",
+                "reasoning": "To improve the quality and accuracy of the release notes",
+                "complexity": "4"
+            },
+            {
+                "description": "Obtain final human approval before distribution",
+                "reasoning": "To ensure the release notes meet all requirements before publication",
+                "complexity": "2"
+            }
+        ],
+        "agent_type": "ReAct",
+        "context": [
+            {
+                "description": "Internal review process guidelines",
+                "reasoning": "To understand the organization's review procedures and feedback incorporation methods",
+                "location": "",
+                "variable_name": "internal_review_guidelines"
+            }
+        ],
+        "inputs": [
+            {
+                "source": "Agent 3",
+                "content": "Generated audience-specific release note content"
+            },
+            {
+                "source": "Human reviewers",
+                "content": "Feedback on release note content"
+            }
+        ],
+        "outputs": [
+            {
+                "recipient": "Agent 1",
+                "content": "Final approved release notes"
+            },
+            {
+                "recipient": "Agent 5",
+                "content": "Process feedback and performance data"
+            }
+        ],
+        "tools": [
+            {
+                "name": "Human Feedback Interface",
+                "description": "A comprehensive tool for managing interactions with human reviewers, including prompting for content checks, collecting and organizing feedback, and obtaining final approval.",
+                "variable_name": "human_feedback_interface"
+            }
+        ],
+        "system": "You are a skilled Human Interaction and Feedback Coordinator, responsible for managing communications with human reviewers and incorporating their feedback into release notes. Your goal is to ensure high-quality, accurate release notes through effective collaboration.\n\nTasks:\n1. Prompt designated reviewers for content checks.\n2. Collect and organize feedback systematically.\n3. Incorporate feedback to improve release notes quality and accuracy.\n4. Obtain final human approval before distribution.\n\nUse the Human Feedback Interface tool to manage reviewer interactions efficiently. Follow internal review process guidelines to align with organizational procedures.\n\nCommunicate professionally and courteously with reviewers. Be clear, concise, and task-focused. Example message:\n\n\"Dear [Reviewer],\nPlease review the attached release notes for accuracy, clarity, and completeness. Your input is vital for ensuring top-quality documentation.\nThank you for your expertise.\nBest regards,\nFeedback Coordinator\"\n\nInput: Audience-specific release note content (Agent 3), Human reviewer feedback\nOutput: Final approved release notes (Agent 1), Process feedback and performance data (Agent 5)\n\nAdapt your communication style to each reviewer's preferences. Prioritize critical feedback and resolve conflicting suggestions diplomatically. Maintain a feedback log to track improvements and recurring issues for future optimization.",
+        "trigger": "This agent is activated when it receives the generated content from the Data Analysis and Content Generation Agent.",
+        "decisions": []
+    },
+    {
+        "id": "5",
+        "name": "Process Management and Optimization Agent",
+        "description": "This agent oversees the entire process, handles exceptions, and focuses on continuous improvement.",
+        "reasoning": "To ensure overall system efficiency, handle exceptions, and drive continuous improvement",
+        "tasks": [
+            {
+                "description": "Coordinate overall process flow",
+                "reasoning": "To ensure smooth operation and timely completion of all tasks",
+                "complexity": "3"
+            },
+            {
+                "description": "Handle exceptions (e.g., insufficient data, API failures)",
+                "reasoning": "To manage and resolve any issues that arise during the process",
+                "complexity": "4"
+            },
+            {
+                "description": "Analyze process performance and identify improvement areas",
+                "reasoning": "To continuously enhance the efficiency and effectiveness of the system",
+                "complexity": "4"
+            },
+            {
+                "description": "Update AI models based on accumulated data and feedback",
+                "reasoning": "To improve the accuracy and relevance of generated content over time",
+                "complexity": "5"
+            }
+        ],
+        "agent_type": "ReAct",
+        "context": [
+            {
+                "description": "Internal System Architecture Documentation",
+                "reasoning": "To understand the organization's internal system architecture for effective process management and optimization",
+                "location": "",
+                "variable_name": "system_architecture_docs"
+            }
+        ],
+        "inputs": [
+            {
+                "source": "Agent 4",
+                "content": "Process feedback and performance data"
+            },
+            {
+                "source": "All Agents",
+                "content": "Exception reports and process metrics"
+            }
+        ],
+        "outputs": [
+            {
+                "recipient": "All Agents",
+                "content": "Process improvements and model updates"
+            }
+        ],
+        "tools": [
+            {
+                "name": "Process Analytics and Optimization Tool",
+                "description": "A tool for real-time monitoring, data analysis, and visualization of process performance. It tracks key performance indicators, identifies bottlenecks, and suggests optimizations to improve overall process efficiency.",
+                "variable_name": "process_analytics_optimizer"
+            },
+            {
+                "name": "Exception Handling and Model Update System",
+                "description": "A system that detects and manages process exceptions such as insufficient data or API failures. It also collects performance data and feedback to facilitate AI model updates, improving accuracy and relevance over time.",
+                "variable_name": "exception_handler_model_updater"
+            }
+        ],
+        "system": "You are an advanced Process Management and Optimization Agent, overseeing workflow, handling exceptions, and driving continuous improvement. Your mission is to ensure seamless operations, swiftly resolve issues, and enhance system efficiency.\n\nTasks:\n1. Coordinate overall process flow\n2. Handle exceptions (e.g., insufficient data, API failures)\n3. Analyze performance and identify improvement areas\n4. Update AI models using accumulated data and feedback\n\nTools at your disposal:\n1. Process Analytics and Optimization Tool (process_analytics_optimizer)\n2. Exception Handling and Model Update System (exception_handler_model_updater)\n3. Internal system architecture documentation (system_architecture_docs)\n\nWhen managing exceptions, assess type, severity, and process impact. Determine if automatic resolution is feasible or human intervention necessary. For improvements, evaluate impact, resource requirements, and alignment with system objectives.\n\nYou receive process feedback, performance data, and exception reports from all agents. Analyze this information to make data-driven decisions and implement proactive solutions.\n\nCommunicate improvements and model updates clearly to all agents. When interacting with humans, maintain a professional, approachable tone, providing detailed explanations and actionable recommendations.\n\nYour effectiveness is measured by overall system efficiency, exception reduction, and continuous performance improvement. Strive for optimal workflow by leveraging your tools and knowledge to make informed decisions and drive system-wide enhancements.",
+        "trigger": "This agent is constantly active, overseeing the entire process from start to finish. It becomes particularly active when it receives signals from other agents about task completion or exceptions.",
+        "decisions": [
+            {
+                "description": "The Process Management and Optimization Agent needs to decide how to handle exceptions reported by other agents. This decision will affect which tasks the agent completes and how it routes information to other agents.",
+                "criteria": "The agent will need to consider the type of exception (e.g., insufficient data, API failure), its severity, and its impact on the overall process. It will also need to determine if the exception can be resolved automatically or if it requires human intervention. The information needed includes the exception report details from the affected agent(s) and the current state of the process."
+            },
+            {
+                "description": "The agent needs to decide which process improvements to implement based on its analysis of process performance and identified improvement areas.",
+                "criteria": "The agent will need to evaluate the potential impact of each improvement, the resources required for implementation, and the alignment with overall system goals. It will need information on current process performance metrics, historical data, and the capabilities of other agents in the system."
+            }
+        ]
+    }
+]

@@ -1,0 +1,186 @@
+[
+    {
+        "id": "1",
+        "name": "Slack Interaction Agent",
+        "description": "This agent handles all interactions with Slack, both for receiving requests and distributing release notes.",
+        "tasks": [
+            {
+                "description": "Monitor designated Slack channels for release note requests",
+                "reasoning": "To detect and respond to user queries in real-time",
+                "complexity": "2"
+            },
+            {
+                "description": "Parse and interpret Slack messages to identify valid requests",
+                "reasoning": "To ensure only relevant requests are processed",
+                "complexity": "3"
+            },
+            {
+                "description": "Distribute final release notes through appropriate Slack channels",
+                "reasoning": "To deliver the completed release notes to the intended audience",
+                "complexity": "2"
+            },
+            {
+                "description": "Handle any Slack-based user queries during the process",
+                "reasoning": "To provide support and clarification throughout the release note generation process",
+                "complexity": "3"
+            }
+        ],
+        "documentation": [
+            {
+                "description": "Internal communication protocols and guidelines",
+                "reasoning": "To understand the appropriate channels, tone, and format for Slack communications within the organization",
+                "location": "",
+                "variable_name": "slack_communication_guidelines"
+            }
+        ],
+        "trigger": "This agent is constantly active, monitoring the designated Slack channel(s) for any queries related to release notes. It initiates the process when it detects a relevant query.",
+        "reasoning": "To manage all Slack-based interactions efficiently and effectively"
+    },
+    {
+        "id": "2",
+        "name": "GitHub Data Retrieval Agent",
+        "description": "This agent focuses on interacting with GitHub's API to fetch necessary data for release notes.",
+        "tasks": [
+            {
+                "description": "Authenticate and establish connection with GitHub API",
+                "reasoning": "To securely access the required GitHub data",
+                "complexity": "2"
+            },
+            {
+                "description": "Fetch commits, issues, and pull requests since last release",
+                "reasoning": "To gather all relevant information for the release notes",
+                "complexity": "3"
+            },
+            {
+                "description": "Handle pagination and rate limiting for large data sets",
+                "reasoning": "To ensure all data is retrieved efficiently within API constraints",
+                "complexity": "3"
+            },
+            {
+                "description": "Parse and initially categorize GitHub data",
+                "reasoning": "To prepare the data for further analysis and content generation",
+                "complexity": "4"
+            }
+        ],
+        "documentation": [],
+        "trigger": "This agent is activated when it receives a signal from the Slack Interaction Agent that a valid release notes request has been detected.",
+        "reasoning": "To efficiently retrieve and prepare GitHub data for release note generation"
+    },
+    {
+        "id": "3",
+        "name": "Data Analysis and Content Generation Agent",
+        "description": "This agent processes the retrieved GitHub data and generates audience-specific content.",
+        "tasks": [
+            {
+                "description": "Analyze and further categorize GitHub data (features, bug fixes, etc.)",
+                "reasoning": "To organize the information for effective content generation",
+                "complexity": "4"
+            },
+            {
+                "description": "Generate audience-specific content (Program Managers, Engineers, C-suite)",
+                "reasoning": "To create tailored release notes for different stakeholders",
+                "complexity": "5"
+            },
+            {
+                "description": "Apply appropriate language and depth for each audience group",
+                "reasoning": "To ensure the content is relevant and understandable for each audience",
+                "complexity": "4"
+            },
+            {
+                "description": "Perform initial quality assurance check",
+                "reasoning": "To ensure the generated content meets basic quality standards",
+                "complexity": "3"
+            }
+        ],
+        "documentation": [
+            {
+                "description": "Example documentation for audience-specific release notes",
+                "reasoning": "To understand the expected format, tone, and content for each audience group (Program Managers, Engineers, C-suite executives)",
+                "location": "",
+                "variable_name": "audience_specific_examples"
+            },
+            {
+                "description": "Release Notes Best Practices Guide",
+                "reasoning": "To understand general principles of effective communication for release notes",
+                "location": "",
+                "variable_name": "release_notes_best_practices"
+            }
+        ],
+        "trigger": "This agent is activated when it receives the processed data from the GitHub Data Retrieval Agent.",
+        "reasoning": "To transform raw GitHub data into meaningful, audience-specific release notes"
+    },
+    {
+        "id": "4",
+        "name": "Human Interaction and Feedback Agent",
+        "description": "This agent manages all direct interactions with human reviewers and incorporates their feedback.",
+        "tasks": [
+            {
+                "description": "Prompt designated human reviewers for content check",
+                "reasoning": "To initiate the human review process",
+                "complexity": "2"
+            },
+            {
+                "description": "Collect and organize human feedback",
+                "reasoning": "To systematically gather improvement suggestions",
+                "complexity": "3"
+            },
+            {
+                "description": "Incorporate feedback into content revisions",
+                "reasoning": "To improve the quality and accuracy of the release notes",
+                "complexity": "4"
+            },
+            {
+                "description": "Obtain final human approval before distribution",
+                "reasoning": "To ensure the release notes meet all requirements before publication",
+                "complexity": "2"
+            }
+        ],
+        "documentation": [
+            {
+                "description": "Internal review process guidelines",
+                "reasoning": "To understand the organization's review procedures and feedback incorporation methods",
+                "location": "",
+                "variable_name": "internal_review_guidelines"
+            }
+        ],
+        "trigger": "This agent is activated when it receives the generated content from the Data Analysis and Content Generation Agent.",
+        "reasoning": "To ensure human oversight and quality control in the release note generation process"
+    },
+    {
+        "id": "5",
+        "name": "Process Management and Optimization Agent",
+        "description": "This agent oversees the entire process, handles exceptions, and focuses on continuous improvement.",
+        "tasks": [
+            {
+                "description": "Coordinate overall process flow",
+                "reasoning": "To ensure smooth operation and timely completion of all tasks",
+                "complexity": "3"
+            },
+            {
+                "description": "Handle exceptions (e.g., insufficient data, API failures)",
+                "reasoning": "To manage and resolve any issues that arise during the process",
+                "complexity": "4"
+            },
+            {
+                "description": "Analyze process performance and identify improvement areas",
+                "reasoning": "To continuously enhance the efficiency and effectiveness of the system",
+                "complexity": "4"
+            },
+            {
+                "description": "Update AI models based on accumulated data and feedback",
+                "reasoning": "To improve the accuracy and relevance of generated content over time",
+                "complexity": "5"
+            }
+        ],
+        "documentation": [
+            {
+                "description": "Internal System Architecture Documentation",
+                "reasoning": "To understand the organization's internal system architecture for effective process management and optimization",
+                "location": "",
+                "variable_name": "system_architecture_docs"
+            }
+        ],
+        "trigger": "This agent is constantly active, overseeing the entire process from start to finish. It becomes particularly active when it receives signals from other agents about task completion or exceptions.",
+        "reasoning": "To ensure overall system efficiency, handle exceptions, and drive continuous improvement"
+    }
+]
