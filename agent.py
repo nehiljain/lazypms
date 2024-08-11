@@ -9,7 +9,7 @@ from context import slack_communication_guidelines, audience_specific_examples, 
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
 
-from langchain_fireworks import ChatFireworks
+from langchain_fireworks import ChatFireworks, FireworksEmbeddings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
