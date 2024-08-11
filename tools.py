@@ -117,16 +117,17 @@ import json
 import re
 
 class GitHubReleaseInput(BaseModel):
-    input: str = Field(description="A JSON string containing 'repo', 'release_id', and 'access_token'. Example: {\"repo\": \"owner/repo\", \"release_id\": \"v1.0.0\", \"access_token\": \"ghp_your_access_token\"}")
+    input: str = Field(description="Requires a JSON string containing 'release_id'. Example: {\"release_id\": \"langchain-core==1.0.0\"}")
 
 @tool("github_release_data_tool", args_schema=GitHubReleaseInput, return_direct=False)
 def github_release_data_tool(input: str) -> str:
     """
     Retrieve GitHub release notes by ID and extract edited code, issues, and pull requests from that release note.
+    Requires a JSON string containing 'release_id'. Example: {\"release_id\": \"langchain-core==1.0.0\"}
     """
     try:
         input_data = json.loads(input)
-        repo_name = input_data['repo']
+        #repo_name = input_data['repo']
         release_id = input_data['release_id']
 
         g = Github(GITHUB_PA_TOKEN)
@@ -140,6 +141,7 @@ def github_release_data_tool(input: str) -> str:
         # Fetch the specific release
         release = repo.get_release(release_id)
 
+        print(release)
         data = {
             "release_title": release.title,
             "release_body": release.body,

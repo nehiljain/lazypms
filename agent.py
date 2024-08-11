@@ -31,12 +31,12 @@ class Config:
 # validate_env_vars()
 
 # Initialize the language model
-# anth_api_key = os.environ['anth_apikey']
-# llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
-llm = ChatFireworks(
-    api_key=os.getenv("FIREWORKS_API_KEY"),
-    model="accounts/fireworks/models/llama-v3p1-70b-instruct"
-)
+anth_api_key = os.environ['ANTHROPIC_API_KEY']
+llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-5-sonnet-20240620')
+# llm = ChatFireworks(
+#     api_key=os.getenv("FIREWORKS_API_KEY"),
+#     model="accounts/fireworks/models/llama-v3p1-70b-instruct"
+# )
 
 # Define tools for each agent
 agent1_tools = [slack_api_tool] #slack_communication_guidelines, slack_api_tool
@@ -187,7 +187,7 @@ def main():
     #while True:
     try:
         # new_messages = slack_api_tool.get_new_messages()
-        new_messages = ["Please generate release notes for the latest release https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-core%3D%3D0.2.0"]
+        new_messages = ["Please generate release notes for the latest github release langchain-openai==0.1.21"]
         for message in new_messages:
             if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
                 initial_state["parsed_request"] = message
