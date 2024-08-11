@@ -50,20 +50,13 @@ def handle_app_mention_events(body, say, logger):
     user = body['event']['user']
     text = body['event']['text']
     
-    if "button" in text.lower():
+    if "suggest some changes" in text.lower():
         blocks = [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "Release Notes for:\n*<https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|langchain-openai==0.1.21>*"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "Changes since langchain-openai==0.1.20\n\nopenai[patch]: Release 0.1.21 (#25269)\npartners: fix of issue #24880 (#25229)\ninfra: temp skip oai embeddings test (#25148)\nopenai[patch]: Release 0.1.21rc2 (#25146)\nopenai[patch]: ChatOpenAI.with_structured_output json_schema support (#25123)\nopenai[patch]: Release 0.1.21rc1 (#25116)\ncore[patch], openai[patch]: enable strict tool calling (#25111)\npatch[Partners] Unified fix of incorrect variable declarations in all check_imports (#25014)"
+                    "text": "After looking at your GitHub releases on that repo, I've noticed that they could use some improvement in making them more informative. Would you like me to take a crack at rewriting those?"
                 }
             },
             {
@@ -74,29 +67,61 @@ def handle_app_mention_events(body, say, logger):
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
-                            "text": "Go Ahead"
+                            "text": "Yes, please!"
                         },
-                        "value": "accepted",
-                        "action_id": "accepted"
+                        "value": "suggest_edits_please",
+                        "action_id": "suggest_edits_please"
                     },
                     {
                         "type": "button",
                         "text": {
                             "type": "plain_text",
                             "emoji": True,
-                            "text": "Let me make some changes"
+                            "text": "Not right now, thanks"
                         },
-                        "value": "rejected",
-                        "action_id": "rejected"
+                        "value": "no_thanks_edits",
+                        "action_id": "no_thanks_edits"
                     }
                 ]
             }
         ]
-        say(blocks=blocks, text="Choose an option:")
+        say(blocks=blocks)        
     else:
         say(f"Hey there <@{user}>!")
 
 # Listens to button clicks
+
+@app.action("suggest_edits_please")
+def handle_suggest_edits(ack, body, say, logger):
+    ack()
+    logger.debug(f"Suggest edits: {body}")
+    
+    say(blocks=[
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "I'm reading through <https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|your latest release (langchain-openai==0.1.21)>... I'll let you know as soon as I have a draft of potential improvements to the release notes."
+            }
+        },
+    ])
+
+    # Kick off the thing
+
+@app.action("no_thanks_edits")
+def handle_no_thanks_edits(ack, body, say, logger):
+    ack()
+    
+    say(blocks=[
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Okay, I won't make any changes!"
+            }
+        },
+    ])
+
 @app.action("accepted")
 def handle_option_1(ack, body, say, logger):
     ack()
