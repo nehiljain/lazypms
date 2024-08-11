@@ -129,7 +129,7 @@ def process_management_optimization_node(state: ReleaseNoteState) -> Dict[str, A
 workflow = StateGraph(ReleaseNoteState)
 
 # Add nodes
-workflow.add_node("slack_interaction", slack_interaction_node)
+# workflow.add_node("slack_interaction", slack_interaction_node)
 workflow.add_node("github_data_retrieval", github_data_retrieval_node)
 workflow.add_node("data_analysis_content_generation", data_analysis_content_generation_node)
 workflow.add_node("human_interaction_feedback", human_interaction_feedback_node)
@@ -144,7 +144,7 @@ def needs_revision(state: ReleaseNoteState) -> str:
 
 # Add edges
 workflow.add_conditional_edges(
-    "slack_interaction",
+    # "slack_interaction",
     is_release_note_query,
     {
         "continue": "github_data_retrieval",
@@ -164,7 +164,8 @@ workflow.add_conditional_edges(
 workflow.add_edge("process_management_optimization", END)
 
 # Set entry point
-workflow.set_entry_point("slack_interaction")
+# workflow.set_entry_point("slack_interaction")
+workflow.set_entry_point("github_data_retrieval")
 
 # Compile the graph
 graph = workflow.compile()
@@ -198,5 +199,5 @@ def main():
         except Exception as e:
             logger.error(f"Error in main loop: {str(e)}")
         
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
