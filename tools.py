@@ -113,65 +113,91 @@ from langchain.agents import tool
 from github import Github, GithubException
 from datetime import datetime, timezone
 import json
+import re
 
 class GitHubDataInput(BaseModel):
-    input: str = Field(description='A JSON string containing "repo", "since_date" (optional), and "access_token". Example: {"repo": "owner/repo", "since_date": "2023-06-01", "access_token": "ghp_your_access_token"}')
+    input: str = Field(description="A JSON string containing 'repo' and 'access_token'. Example: {\"repo\": \"owner/repo\", \"access_token\": \"ghp_your_access_token\"}")
 
 @tool("github_data_tool", args_schema=GitHubDataInput, return_direct=False)
 def github_data_tool(input: str) -> str:
     """
-    Retrieve and process GitHub data for release notes preparation.
-    Handles authentication, data retrieval, pagination, rate limiting, and initial parsing of GitHub data (commits, issues, pull requests).
+    Retrieve and process GitHub data for the latest release, including edited code, issues, and pull requests mentioned in the release notes.
     """
     try:
         input_data = json.loads(input)
         repo_name = input_data['repo']
-        since_date = input_data.get('since_date')
         access_token = input_data['access_token']
 
         g = Github(access_token)
         repo = g.get_repo(repo_name)
 
-        if since_date:
-            since_date = datetime.strptime(since_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        # Fetch the latest release
+        latest_release = repo.get_latest_release()
+        release_date = latest_release.created_at
 
         data = {
-            "commits": [],
+            "release": {
+                "tag_name": latest_release.tag_name,
+                "name": latest_release.title,
+                "body": latest_release.body,
+                "created_at": release_date.isoformat()
+            },
+            "edited_code": [],
             "issues": [],
             "pull_requests": []
         }
 
-        # Fetch commits
-        commits = repo.get_commits(since=since_date) if since_date else repo.get_commits()
-        for commit in commits[:100]:  # Limit to 100 commits to avoid excessive API calls
-            data["commits"].append({
-                "sha": commit.sha,
-                "message": commit.commit.message.split('\n')[0],  # Only include first line of commit message
-                "author": commit.commit.author.name,
-                "date": commit.commit.author.date.isoformat()
-            })
+        # Extract issue and PR numbers from release notes
+        issue_numbers = re.findall(r'#(\d+)', latest_release.body)
+        
+        # Function to fetch file content
+        def get_file_content(file_path, ref):
+            try:
+                return repo.get_contents(file_path, ref=ref).decoded_content.decode('utf-8')
+            except:
+                return None
 
-        # Fetch issues and pull requests
-        issues = repo.get_issues(state='all', since=since_date) if since_date else repo.get_issues(state='all')
-        for issue in issues[:100]:  # Limit to 100 issues/PRs to avoid excessive API calls
-            if issue.pull_request:
-                data["pull_requests"].append({
-                    "number": issue.number,
-                    "title": issue.title,
-                    "state": issue.state,
-                    "author": issue.user.login,
-                    "created_at": issue.created_at.isoformat(),
-                    "merged_at": issue.pull_request.merged_at.isoformat() if issue.pull_request.merged_at else None
+        # Fetch edited code
+        comparison = repo.compare(latest_release.target_commitish, latest_release.tag_name)
+        for file in comparison.files:
+            if file.status == "modified":
+                data["edited_code"].append({
+                    "filename": file.filename,
+                    "status": file.status,
+                    "additions": file.additions,
+                    "deletions": file.deletions,
+                    "changes": file.changes,
+                    "content_before": get_file_content(file.filename, comparison.base_commit.sha),
+                    "content_after": get_file_content(file.filename, comparison.merge_base_commit.sha)
                 })
-            else:
-                data["issues"].append({
-                    "number": issue.number,
-                    "title": issue.title,
-                    "state": issue.state,
-                    "author": issue.user.login,
-                    "created_at": issue.created_at.isoformat(),
-                    "closed_at": issue.closed_at.isoformat() if issue.closed_at else None
-                })
+
+        # Fetch issues and pull requests mentioned in release notes
+        for number in issue_numbers:
+            try:
+                issue = repo.get_issue(int(number))
+                if issue.pull_request:
+                    pr = repo.get_pull(int(number))
+                    data["pull_requests"].append({
+                        "number": pr.number,
+                        "title": pr.title,
+                        "state": pr.state,
+                        "author": pr.user.login,
+                        "created_at": pr.created_at.isoformat(),
+                        "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
+                        "body": pr.body
+                    })
+                else:
+                    data["issues"].append({
+                        "number": issue.number,
+                        "title": issue.title,
+                        "state": issue.state,
+                        "author": issue.user.login,
+                        "created_at": issue.created_at.isoformat(),
+                        "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
+                        "body": issue.body
+                    })
+            except GithubException:
+                continue
 
         return json.dumps(data, indent=2)
 
@@ -179,7 +205,7 @@ def github_data_tool(input: str) -> str:
         if e.status == 403:
             return json.dumps({"error": "Rate limit exceeded. Please wait and try again later."})
         elif e.status == 404:
-            return json.dumps({"error": "Repository not found. Please check the repository name."})
+            return json.dumps({"error": "Repository or release not found. Please check the repository name."})
         else:
             return json.dumps({"error": f"GitHub API error: {str(e)}"})
     except json.JSONDecodeError:
@@ -188,7 +214,6 @@ def github_data_tool(input: str) -> str:
         return json.dumps({"error": f"Missing required field in input: {str(e)}"})
     except Exception as e:
         return json.dumps({"error": f"An unexpected error occurred: {str(e)}"})
-
 
 from typing import Optional, Type
 from pydantic.v1 import BaseModel, Field
