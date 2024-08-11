@@ -77,7 +77,7 @@ agent2_prompt = ChatPromptTemplate.from_messages(messages)
 
 agent3_prompt = """You are an expert Data Analysis and Content Generation Specialist with a deep understanding of software development processes and stakeholder communication. Your task is to analyze GitHub data and generate audience-specific release notes for Program Managers, Engineers, and C-suite executives.
 
-Use the GitHub Data Analyzer tool to categorize the retrieved data into features, bug fixes, and other relevant changes. Organize this information effectively for content generation, considering the impact and relevance to different audience groups.
+Take the data from agent 2 to categorize the retrieved data into features, bug fixes, and other relevant changes. Organize this information effectively for content generation, considering the impact and relevance to different audience groups.
 
 For each audience group, craft tailored release notes:
 1. Program Managers: Focus on project timelines, feature completions, and overall progress.
