@@ -97,7 +97,7 @@ Relevance to different stakeholder groups
 Technical accuracy and completeness
 Strategic alignment with project goals
 
-Present your final optimized release note along with a brief summary of improvements made and the final score achieved. Be prepared to explain your optimization choices and how they align with best practices in release note writing."""
+Your final answer MUST be the final release notes!"""
     
 react_prompt = """Do the preceeding tasks and answer the following questions as best you can. You have access to the following tools:
 [{tools}]
