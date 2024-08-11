@@ -170,13 +170,6 @@ workflow.set_entry_point("github_data_retrieval")
 # Compile the graph
 graph = workflow.compile()
 
-from IPython.display import Image, display
-from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeStyles
-
-png1 = Image(graph.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API,))
-with open("graph_api.png", "wb") as png:
-    png.write(png1.data)
-
 # Main program
 def run_agent():
     initial_state: ReleaseNoteState = {
@@ -206,5 +199,5 @@ def run_agent():
     except Exception as e:
         logger.error(f"Error in main loop: {str(e)}")
     
-# if __name__ == "__main__":
-#     run_agent()
+if __name__ == "__main__":
+    run_agent()
