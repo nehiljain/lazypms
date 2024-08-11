@@ -141,6 +141,7 @@ def github_release_data_tool(input: str) -> str:
         # Check if the output file exists
         output_file = f"{release_id}.json"
         if os.path.exists(output_file):
+            print("found cached response file for release_id", release_id)
             with open(output_file, 'r') as file:
                 return file.read()
 
