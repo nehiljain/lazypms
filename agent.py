@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_anthropic import ChatAnthropic
-from tools import slack_api_tool, github_release_data_tool, github_analyzer_tool, human_feedback_interface, process_analytics_optimizer, exception_handler_model_updater
+from tools import slack_api_tool, github_release_data_tool, release_summary_scorer, human_feedback_interface, process_analytics_optimizer, exception_handler_model_updater
 from context import slack_communication_guidelines, audience_specific_examples, release_notes_best_practices_tool, internal_review_guidelines, system_architecture_docs
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
@@ -41,7 +41,7 @@ llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='clau
 # Define tools for each agent
 agent1_tools = [slack_api_tool] #slack_communication_guidelines, slack_api_tool
 agent2_tools = [github_release_data_tool]
-agent3_tools = [audience_specific_examples, release_notes_best_practices_tool] #github_analyzer_tool
+agent3_tools = [release_summary_scorer, audience_specific_examples, release_notes_best_practices_tool] #github_analyzer_tool
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
 agent5_tools = [process_analytics_optimizer, exception_handler_model_updater, system_architecture_docs]
 

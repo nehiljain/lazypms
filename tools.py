@@ -218,72 +218,101 @@ from github import Github
 from github.GithubException import GithubException, RateLimitExceededException
 from datetime import datetime, timedelta
 
-class GitHubAnalyzerInput(BaseModel):
-    input: str = Field(description="A JSON string containing 'repo' (string, format: 'owner/repo') and 'days' (optional int, default 30). Example: {\"repo\": \"langchain-ai/langchain\", \"days\": 7}")
+from typing import Optional, Type
+from pydantic.v1 import BaseModel, Field
+from langchain.agents import tool
+import json
+from textblob import TextBlob
 
-@tool("github_analyzer_tool", args_schema=GitHubAnalyzerInput, return_direct=False)
-def github_analyzer_tool(input: str) -> str:
-    """Analyzes a GitHub repository to categorize and organize information about features, bug fixes, and other relevant changes.
-    
+class ReleaseSummaryInput(BaseModel):
+    input: str = Field(description="A JSON string containing an 'summary' (string, the release note summary to be scored). Example: {\"summary\": \"This release includes new features such as improved API performance, bug fixes for UI rendering issues, and updates to documentation.\"}")
+
+@tool("release_summary_scorer", args_schema=ReleaseSummaryInput, return_direct=False)
+def release_summary_scorer(input: str) -> str:
+    """Receives a new release note summary and scores it based on how good it is.
+    A JSON string containing an 'summary' (string, the release note summary to be scored). Example: {\"summary\": \"This release includes new features such as improved API performance, bug fixes for UI rendering issues, and updates to documentation.\"}
     """
     try:
         input_data = json.loads(input)
-        repo = input_data['repo']
-        days = input_data.get('days', 30)
+        summary = input_data['summary']
 
-        g = Github(GITHUB_PA_TOKEN)  # Replace with your actual GitHub API token
-        #real repo
-        repo = g.get_repo('langchain-ai/langchain')
+        # Scoring criteria
+        criteria = {
+            'length': score_length(summary),
+            'clarity': score_clarity(summary),
+            'completeness': score_completeness(summary),
+            'sentiment': score_sentiment(summary)
+        }
 
-        #fake repo
-        fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
-        
-        # Fetch recent commits
-        since_date = datetime.now() - timedelta(days=days)
-        commits = repo.get_commits(since=since_date)
-        
-        # Analyze commits and categorize changes
-        features = []
-        bug_fixes = []
-        other_changes = []
-        
-        for commit in commits:
-            message = commit.commit.message.lower()
-            if "feature" in message or "feat" in message:
-                features.append(commit.commit.message)
-            elif "fix" in message or "bug" in message:
-                bug_fixes.append(commit.commit.message)
-            else:
-                other_changes.append(commit.commit.message)
-        
+        # Calculate overall score
+        overall_score = sum(criteria.values()) / len(criteria)
+
         # Prepare structured output
         analysis = {
-            "repo": repo,
-            "analysis_period": f"Last {days} days",
-            "features": features,
-            "bug_fixes": bug_fixes,
-            "other_changes": other_changes,
-            "summary": {
-                "total_commits": len(features) + len(bug_fixes) + len(other_changes),
-                "feature_count": len(features),
-                "bug_fix_count": len(bug_fixes),
-                "other_change_count": len(other_changes)
-            }
+            "summary": summary,
+            "scores": criteria,
+            "overall_score": overall_score,
+            "feedback": generate_feedback(criteria, overall_score)
         }
-        
+
         return json.dumps(analysis, indent=2)
-
     except json.JSONDecodeError:
-        return json.dumps({"error": "Invalid input JSON"})
-    except KeyError as e:
-        return json.dumps({"error": f"Missing required key in input: {str(e)}"})
-    except RateLimitExceededException:
-        return json.dumps({"error": "GitHub API rate limit exceeded. Please try again later."})
-    except GithubException as e:
-        return json.dumps({"error": f"GitHub API error: {str(e)}"})
-    except Exception as e:
-        return json.dumps({"error": f"An unexpected error occurred: {str(e)}"})
+        return "Error: Invalid JSON input"
+    except KeyError:
+        return "Error: Missing 'summary' key in input"
 
+def score_length(summary: str) -> float:
+    """Score the length of the summary."""
+    words = len(summary.split())
+    if words < 20:
+        return 0.5
+    elif words < 50:
+        return 0.75
+    elif words < 100:
+        return 1.0
+    else:
+        return 0.9  # Penalize slightly for being too long
+
+def score_clarity(summary: str) -> float:
+    """Score the clarity of the summary."""
+    # This is a simplified scoring method. In a real-world scenario, you might use more sophisticated NLP techniques.
+    clear_phrases = ['new feature', 'improvement', 'bug fix', 'update', 'enhancement']
+    score = sum(1 for phrase in clear_phrases if phrase in summary.lower()) / len(clear_phrases)
+    return min(score, 1.0)  # Cap at 1.0
+
+def score_completeness(summary: str) -> float:
+    """Score the completeness of the summary."""
+    # Check for presence of key sections
+    sections = ['feature', 'fix', 'improvement', 'known issue']
+    score = sum(1 for section in sections if section in summary.lower()) / len(sections)
+    return score
+
+def score_sentiment(summary: str) -> float:
+    """Score the sentiment of the summary."""
+    blob = TextBlob(summary)
+    # Normalize sentiment to 0-1 range
+    return (blob.sentiment.polarity + 1) / 2
+
+def generate_feedback(criteria: dict, overall_score: float) -> str:
+    """Generate feedback based on scores."""
+    feedback = []
+    if criteria['length'] < 0.7:
+        feedback.append("Consider providing more details in the summary.")
+    if criteria['clarity'] < 0.7:
+        feedback.append("Try to use clearer language to describe changes.")
+    if criteria['completeness'] < 0.7:
+        feedback.append("Ensure all key sections (features, fixes, improvements) are covered.")
+    if criteria['sentiment'] < 0.5:
+        feedback.append("The tone of the summary could be more positive.")
+    
+    if overall_score >= 0.8:
+        feedback.append("Overall, this is a good release summary.")
+    elif overall_score >= 0.6:
+        feedback.append("The summary is adequate but could be improved.")
+    else:
+        feedback.append("The summary needs significant improvement.")
+
+    return " ".join(feedback)
 
 from typing import Optional, Type
 from pydantic.v1 import BaseModel, Field
