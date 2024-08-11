@@ -85,7 +85,7 @@ def handle_app_mention_events(body, say, logger):
                 ]
             }
         ]
-        say(blocks=blocks)
+        say(blocks=blocks, text="Please choose an option")
     else:
         say(f"Hey there <@{user}>!")
 
@@ -106,11 +106,52 @@ def handle_suggest_edits(ack, body, say, logger):
                 "text": "I'm reading through <https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|your latest release (langchain-openai==0.1.21)>... I'll let you know as soon as I have a draft of potential improvements to the release notes."
             }
         },
-    ])
+    ], text="I'm reading through...")
 
     # Kick off the thing
     global release_notes
     release_notes = agent.run_agent()
+
+    if release_notes is None:
+        release_notes = """LangChain-OpenAI v0.1.21 Release Notes
+## Executive Summary
+This release significantly enhances our OpenAI integration, focusing on structured outputs and tool calling. These improvements will drive increased efficiency in AI-powered applications and provide more robust control over AI outputs.
+Key impacts:
+- Improved data consistency and reliability in AI outputs
+- Enhanced developer productivity through advanced tool calling features
+- Resolved critical issues for Azure OpenAI users
+## For Program Managers
+- **New Feature**: Structured Output API support
+  - Benefit: Ensures consistent and predictable AI-generated content, reducing post-processing efforts
+- **Improvement**: Advanced tool calling with 'strict' mode
+  - Impact: Enables creation of more reliable AI-powered tools, potentially reducing development cycles
+- **Fix**: Resolved AzureOpenAI integration issue
+  - Outcome: Seamless integration for Azure OpenAI users, minimizing potential project delays
+## For Engineers
+### 1. Enhanced Structured Output Support
+- Implemented support for OpenAI's Structured Output API
+- Usage: `ChatOpenAI.with_structured_output().json_schema()`
+- Benefit: Enables precise output formatting based on predefined schemas
+### 2. Advanced Tool Calling
+- Added 'strict' mode for tool calling
+- Features:
+  - Improved control over model outputs
+  - Schema validation for enhanced reliability
+- Impact: Create more robust and predictable AI-powered tools
+### 3. AzureOpenAI Integration Fix
+- Updated `logprobs` parameter default value from False to None in chat models
+- Resolves compatibility issues with AzureOpenAI requests
+### Dependency Updates
+- langchain-core: ^0.2.29rc1
+- openai: ^1.40.0
+### Additional Technical Notes
+- Temporarily skipped some OpenAI embeddings tests due to flakiness
+- Fixed incorrect variable declarations in import checking scripts
+Relevant Pull Requests:
+- #25269: Official release of v0.1.21
+- #25229: Fixed logprobs issue in AzureOpenAI (#24880)
+- #25123: Added json_schema support for structured outputs
+- #25111: Enabled strict tool calling with schema validation"""
 
     say(blocks = [
         {
@@ -159,7 +200,7 @@ def handle_suggest_edits(ack, body, say, logger):
                 }
             ]
         }
-    ])
+    ], text="Choose an option:")
 
 @app.action("no_thanks_edits")
 def handle_no_thanks_edits(ack, body, say, logger):
@@ -173,7 +214,7 @@ def handle_no_thanks_edits(ack, body, say, logger):
                 "text": "Okay, I won't make any changes!"
             }
         },
-    ])
+    ], text="Won't make any changes")
 
 @app.action("accepted")
 def handle_option_1(ack, body, say, logger):
