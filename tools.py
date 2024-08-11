@@ -223,7 +223,9 @@ class GitHubAnalyzerInput(BaseModel):
 
 @tool("github_analyzer_tool", args_schema=GitHubAnalyzerInput, return_direct=False)
 def github_analyzer_tool(input: str) -> str:
-    """Analyzes a GitHub repository to categorize and organize information about features, bug fixes, and other relevant changes."""
+    """Analyzes a GitHub repository to categorize and organize information about features, bug fixes, and other relevant changes.
+    
+    """
     try:
         input_data = json.loads(input)
         repo = input_data['repo']

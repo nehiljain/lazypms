@@ -3,15 +3,18 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
 from langchain.vectorstores.chroma import Chroma
 import chromadb
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
-from langchain_fireworks import FireworksEmbeddings
 modelPath = "BAAI/bge-small-en-v1.5" 
 model_kwargs = {'device':'cpu','trust_remote_code':'True'}
 encode_kwargs = {'normalize_embeddings': True}
 
 # Initialize an instance of HuggingFaceEmbeddings with the specified parameters
-embeddings = FireworksEmbeddings(model="nomic-ai/nomic-embed-text-v1.5")
-
+embeddings = HuggingFaceEmbeddings(
+    model_name=modelPath,     # Provide the pre-trained model's path
+    model_kwargs=model_kwargs, # Pass the model configuration options
+    encode_kwargs=encode_kwargs # Pass the encoding options
+)
 
 chroma = chromadb.PersistentClient(path="./chroma_db")
 
@@ -63,7 +66,7 @@ def load_slack_communication_guidelines(chroma, embeddings):
                 documents=[doc.page_content]
             )
 
-# load_slack_communication_guidelines(chroma, embeddings)
+load_slack_communication_guidelines(chroma, embeddings)
 
 slack_communication_guidelines = create_retriever_tool(
     Chroma(client=chroma, collection_name="slack_communication_guidelines", embedding_function=embeddings).as_retriever(),
@@ -113,7 +116,7 @@ def load_audience_specific_examples(chroma, embeddings):
         except Exception as e:
             print(f"Error loading documents: {e}")
 
-# load_audience_specific_examples(chroma, embeddings)
+load_audience_specific_examples(chroma, embeddings)
 
 audience_specific_examples = create_retriever_tool(
     Chroma(
@@ -163,7 +166,7 @@ def load_release_notes_best_practices(chroma, embeddings):
         except Exception as e:
             print(f"Error loading release notes best practices: {e}")
 
-# load_release_notes_best_practices(chroma, embeddings)
+load_release_notes_best_practices(chroma, embeddings)
 
 release_notes_best_practices = Chroma(
     client=chroma,
@@ -217,7 +220,7 @@ def load_internal_review_guidelines(chroma, embeddings, collection_name="interna
         print(f"Collection {collection_name} already exists. Skipping document loading.")
     return True
 
-# load_internal_review_guidelines(chroma, embeddings):
+load_internal_review_guidelines(chroma, embeddings)
 
 chroma_retriever = Chroma(
     client=chroma,
@@ -267,7 +270,7 @@ def load_system_architecture_docs(chroma_client, embeddings):
                 ids=[str(uuid.uuid1())], embeddings=emb, metadatas=doc.metadata, documents=[doc.page_content]
             )
 
-# load_system_architecture_docs(chroma, embeddings)
+load_system_architecture_docs(chroma, embeddings)
 
 system_architecture_vectorstore = Chroma(
     client=chroma,

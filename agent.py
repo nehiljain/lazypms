@@ -41,7 +41,7 @@ llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='clau
 # Define tools for each agent
 agent1_tools = [slack_api_tool] #slack_communication_guidelines, slack_api_tool
 agent2_tools = [github_release_data_tool]
-agent3_tools = [github_analyzer_tool, audience_specific_examples, release_notes_best_practices_tool]
+agent3_tools = [audience_specific_examples, release_notes_best_practices_tool] #github_analyzer_tool
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
 agent5_tools = [process_analytics_optimizer, exception_handler_model_updater, system_architecture_docs]
 
