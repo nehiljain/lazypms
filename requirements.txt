@@ -1,0 +1,21 @@
+langchain
+langchain-fireworks
+langchain-community
+langsmith
+jupyterlab
+litellm
+composio-langchain
+streamlit
+langgraph
+black
+flake8
+isort
+loguru
+mkdocs
+pip
+python-dotenv
+tqdm
+typer
+slack_bolt
+slack_sdk
+-e .
