@@ -12,6 +12,7 @@ import os
 # Initialize the Slack client and app
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
+GITHUB_PA_TOKEN = os.environ.get("GITHUB_PA_TOKEN")
 
 if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
     raise ValueError("SLACK_BOT_TOKEN and SLACK_APP_TOKEN must be set in environment variables")
@@ -128,7 +129,7 @@ def github_data_tool(input: str) -> str:
         repo_name = input_data['repo']
         access_token = input_data['access_token']
 
-        g = Github(access_token)
+        g = Github(GITHUB_PA_TOKEN)
         repo = g.get_repo(repo_name)
 
         # Fetch the latest release
@@ -234,7 +235,7 @@ def github_analyzer_tool(input: str) -> str:
         repo = input_data['repo']
         days = input_data.get('days', 30)
 
-        g = Github("your_github_api_token")  # Replace with your actual GitHub API token
+        g = Github(GITHUB_PA_TOKEN)  # Replace with your actual GitHub API token
         repository = g.get_repo(repo)
         
         # Fetch recent commits

@@ -9,6 +9,8 @@ from context import slack_communication_guidelines, audience_specific_examples, 
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
 
+from langchain_fireworks import llm as FireworksLLM
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -29,8 +31,12 @@ def validate_env_vars():
 validate_env_vars()
 
 # Initialize the language model
-anth_api_key = os.environ['anth_apikey']
-llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
+# anth_api_key = os.environ['anth_apikey']
+# llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
+llm = FireworksLLM(
+    api_key=os.getenv("FIREWORKS_API_KEY"),
+    model="accounts/fireworks/models/llama-v3p1-8b-instruct"
+)
 
 # Define tools for each agent
 agent1_tools = [slack_api_tool, slack_communication_guidelines]
@@ -179,7 +185,8 @@ def main():
 
     while True:
         try:
-            new_messages = slack_api_tool.get_new_messages()
+            # new_messages = slack_api_tool.get_new_messages()
+            new_messages = ["Please generate release notes for the latest release https://github.com/langchain-ai/langchain/releases/tag/langchain-core%3D%3D0.2.0"]
             for message in new_messages:
                 if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
                     initial_state["input"] = message
