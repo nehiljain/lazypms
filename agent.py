@@ -171,7 +171,7 @@ workflow.set_entry_point("github_data_retrieval")
 graph = workflow.compile()
 
 # Main program
-def main():
+def run_agent():
     initial_state: ReleaseNoteState = {
         "input": "",
         "parsed_request": None,
@@ -184,7 +184,6 @@ def main():
         "process_metrics": {}
     }
 
-    #while True:
     try:
         # new_messages = slack_api_tool.get_new_messages()
         new_messages = ["Please generate release notes for the latest github release langchain-openai==0.1.21"]
@@ -195,9 +194,10 @@ def main():
                     print(f"Step: {step}")
                     if "final_release_notes" in step and step["final_release_notes"]:
                         print(step["final_release_notes"])
-                        slack_api_tool.send_message(step["final_release_notes"])
+
+                        return step["final_release_notes"]
     except Exception as e:
         logger.error(f"Error in main loop: {str(e)}")
     
 if __name__ == "__main__":
-    main()
+    run_agent()
