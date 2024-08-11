@@ -116,76 +116,54 @@ from datetime import datetime, timezone
 import json
 import re
 
-class GitHubDataInput(BaseModel):
-    input: str = Field(description="A JSON string containing 'repo' and 'access_token'. Example: {\"repo\": \"owner/repo\", \"access_token\": \"ghp_your_access_token\"}")
+class GitHubReleaseInput(BaseModel):
+    input: str = Field(description="A JSON string containing 'repo', 'release_id', and 'access_token'. Example: {\"repo\": \"owner/repo\", \"release_id\": \"v1.0.0\", \"access_token\": \"ghp_your_access_token\"}")
 
-@tool("github_data_tool", args_schema=GitHubDataInput, return_direct=False)
-def github_data_tool(input: str) -> str:
+@tool("github_release_data_tool", args_schema=GitHubReleaseInput, return_direct=False)
+def github_release_data_tool(input: str) -> str:
     """
-    Retrieve and process GitHub data for the latest release, including edited code, issues, and pull requests mentioned in the release notes.
+    Retrieve GitHub release notes by ID and extract edited code, issues, and pull requests from that release note.
     """
     try:
         input_data = json.loads(input)
         repo_name = input_data['repo']
+        release_id = input_data['release_id']
         access_token = input_data['access_token']
 
-        g = Github(GITHUB_PA_TOKEN)
+        g = Github(access_token)
         repo = g.get_repo(repo_name)
 
-        # Fetch the latest release
-        latest_release = repo.get_latest_release()
-        release_date = latest_release.created_at
+        # Fetch the specific release
+        release = repo.get_release(release_id)
 
         data = {
-            "release": {
-                "tag_name": latest_release.tag_name,
-                "name": latest_release.title,
-                "body": latest_release.body,
-                "created_at": release_date.isoformat()
-            },
+            "release_title": release.title,
+            "release_body": release.body,
             "edited_code": [],
             "issues": [],
             "pull_requests": []
         }
 
-        # Extract issue and PR numbers from release notes
-        issue_numbers = re.findall(r'#(\d+)', latest_release.body)
-        
-        # Function to fetch file content
-        def get_file_content(file_path, ref):
-            try:
-                return repo.get_contents(file_path, ref=ref).decoded_content.decode('utf-8')
-            except:
-                return None
+        # Extract edited code from release notes
+        code_blocks = re.findall(r'```[\s\S]*?```', release.body)
+        for block in code_blocks:
+            data["edited_code"].append(block.strip('`'))
 
-        # Fetch edited code
-        comparison = repo.compare(latest_release.target_commitish, latest_release.tag_name)
-        for file in comparison.files:
-            if file.status == "modified":
-                data["edited_code"].append({
-                    "filename": file.filename,
-                    "status": file.status,
-                    "additions": file.additions,
-                    "deletions": file.deletions,
-                    "changes": file.changes,
-                    "content_before": get_file_content(file.filename, comparison.base_commit.sha),
-                    "content_after": get_file_content(file.filename, comparison.merge_base_commit.sha)
-                })
+        # Extract issues and pull requests from release notes
+        issue_pattern = r'#(\d+)'
+        issues_and_prs = re.findall(issue_pattern, release.body)
 
-        # Fetch issues and pull requests mentioned in release notes
-        for number in issue_numbers:
+        for number in issues_and_prs:
             try:
                 issue = repo.get_issue(int(number))
                 if issue.pull_request:
-                    pr = repo.get_pull(int(number))
                     data["pull_requests"].append({
-                        "number": pr.number,
-                        "title": pr.title,
-                        "state": pr.state,
-                        "author": pr.user.login,
-                        "created_at": pr.created_at.isoformat(),
-                        "merged_at": pr.merged_at.isoformat() if pr.merged_at else None,
-                        "body": pr.body
+                        "number": issue.number,
+                        "title": issue.title,
+                        "state": issue.state,
+                        "author": issue.user.login,
+                        "created_at": issue.created_at.isoformat(),
+                        "merged_at": issue.pull_request.merged_at.isoformat() if issue.pull_request.merged_at else None
                     })
                 else:
                     data["issues"].append({
@@ -194,10 +172,10 @@ def github_data_tool(input: str) -> str:
                         "state": issue.state,
                         "author": issue.user.login,
                         "created_at": issue.created_at.isoformat(),
-                        "closed_at": issue.closed_at.isoformat() if issue.closed_at else None,
-                        "body": issue.body
+                        "closed_at": issue.closed_at.isoformat() if issue.closed_at else None
                     })
             except GithubException:
+                # If we can't fetch the issue/PR, we'll skip it
                 continue
 
         return json.dumps(data, indent=2)
@@ -206,7 +184,7 @@ def github_data_tool(input: str) -> str:
         if e.status == 403:
             return json.dumps({"error": "Rate limit exceeded. Please wait and try again later."})
         elif e.status == 404:
-            return json.dumps({"error": "Repository or release not found. Please check the repository name."})
+            return json.dumps({"error": "Repository or release not found. Please check the repository name and release ID."})
         else:
             return json.dumps({"error": f"GitHub API error: {str(e)}"})
     except json.JSONDecodeError:
