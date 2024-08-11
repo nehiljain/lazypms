@@ -54,8 +54,8 @@ agent5 = create_react_agent(llm, agent5_tools, agent5_prompt)
 # Create agent executors
 agent1_executor = AgentExecutor(agent=agent1, tools=agent1_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True, max_iterations=5)
-agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=7)
-agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=3)
+agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=10)
+agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=10)
 agent5_executor = AgentExecutor(agent=agent5, tools=agent5_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 
 # Define the StateGraph
