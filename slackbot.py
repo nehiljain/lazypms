@@ -16,7 +16,6 @@ logging.basicConfig(level=logging.DEBUG)
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 # GitHub configuration
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 REPO_OWNER = 'nehiljain'
 REPO_NAME = 'langchain-by-lazypms'
 RELEASE_TAG = 'langchain-openai==0.1.21'
@@ -27,7 +26,6 @@ UPDATE_RELEASE_URL = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/rel
 
 # Headers for the GitHub API request
 githubHeaders = {
-    'Authorization': f'token {GITHUB_TOKEN}',
     'Accept': 'application/vnd.github.v3+json',
 }
 
@@ -36,11 +34,12 @@ def get_release():
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()
 
-def update_release(release_id, new_body):
+def update_release(release_id, new_body, access_token):
     update_data = {
         'body': new_body
     }
-    response = requests.patch(UPDATE_RELEASE_URL.format(release_id=release_id), json=update_data, headers=githubHeaders)
+    headers = {**githubHeaders, 'Authorization': f'token {os.environ.get("GITHUB_ACCESS_TOKEN")}'}
+    response = requests.patch(UPDATE_RELEASE_URL.format(release_id=release_id), json=update_data, headers=headers)
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()
 
@@ -187,7 +186,9 @@ def handle_option_1(ack, body, say, logger):
 
         release = get_release()
         release_id = release['id']
-        update_release(release_id, release_notes)
+        # Assume access_token has been retrieved and stored somewhere
+        access_token = 'your_retrieved_access_token'
+        update_release(release_id, release_notes, access_token)
         say(f"Great, I've updated <https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|the release notes (langchain-openai==0.1.21)> as described above")
     except Exception as e:
         logger.error(f"Failed to update release notes: {e}")

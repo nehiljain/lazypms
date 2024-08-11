@@ -20,7 +20,7 @@ load_dotenv()
 # Configuration
 class Config:
     RELEASE_NOTE_KEYWORDS = ["release notes", "changelog", "update", "new features"]
-    REQUIRED_ENV_VARS = ['GITHUB_PA_TOKEN', 'SLACK_APP_TOKEN',"SLACK_BOT_TOKEN", "SLACK_SIGNING_SECRET", "FIREWORKS_API_KEY"]
+    REQUIRED_ENV_VARS = ['GITHUB_ACCESS_TOKEN', 'SLACK_APP_TOKEN',"SLACK_BOT_TOKEN", "SLACK_SIGNING_SECRET", "FIREWORKS_API_KEY"]
 
 # def validate_env_vars():
 #     for var in Config.REQUIRED_ENV_VARS:
@@ -42,7 +42,7 @@ agent1_tools = [slack_api_tool] #slack_communication_guidelines, slack_api_tool
 agent2_tools = [github_release_data_tool]
 agent3_tools = [release_summary_scorer, audience_specific_examples, release_notes_best_practices_tool] #github_analyzer_tool
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
-agent5_tools = [process_analytics_optimizer, exception_handler_model_updater, system_architecture_docs]
+agent5_tools = [exception_handler_model_updater, system_architecture_docs]
 
 # Create ReAct agents
 agent1 = create_react_agent(llm, agent1_tools, agent1_prompt)
@@ -132,8 +132,8 @@ workflow = StateGraph(ReleaseNoteState)
 #workflow.add_node("slack_interaction", slack_interaction_node)
 workflow.add_node("github_data_retrieval", github_data_retrieval_node)
 workflow.add_node("data_analysis_content_generation", data_analysis_content_generation_node)
-workflow.add_node("human_interaction_feedback", human_interaction_feedback_node)
-workflow.add_node("process_management_optimization", process_management_optimization_node)
+# workflow.add_node("human_interaction_feedback", human_interaction_feedback_node)
+# workflow.add_node("process_management_optimization", process_management_optimization_node)
 
 # Define conditional edges
 def is_release_note_query(state: ReleaseNoteState) -> str:
@@ -152,16 +152,17 @@ def needs_revision(state: ReleaseNoteState) -> str:
 #     }
 # )
 workflow.add_edge("github_data_retrieval", "data_analysis_content_generation")
-workflow.add_edge("data_analysis_content_generation", "human_interaction_feedback")
-workflow.add_conditional_edges(
-    "human_interaction_feedback",
-    needs_revision,
-    {
-        "revise": "data_analysis_content_generation",
-        "finalize": "process_management_optimization"
-    }
-)
-workflow.add_edge("process_management_optimization", END)
+workflow.add_edge("data_analysis_content_generation", END)
+# workflow.add_edge("data_analysis_content_generation", "human_interaction_feedback")
+# workflow.add_conditional_edges(
+#     "human_interaction_feedback",
+#     needs_revision,
+#     {
+#         "revise": "data_analysis_content_generation",
+#         "finalize": "process_management_optimization"
+#     }
+# )
+# workflow.add_edge("process_management_optimization", END)
 
 # Set entry point
 #workflow.set_entry_point("slack_interaction")
