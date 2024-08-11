@@ -45,10 +45,13 @@ Prepare the gathered and categorized data for Agent 3 in this structure:
 - Commits: hash, author, date, message
 - Issues: ID, title, status, labels
 - Pull Requests: ID, title, status, associated branch
+- Full summary
 
-Include metadata such as repository name, time range, and total counts for each category. If data volume is large, summarize key statistics (e.g., most active contributors, most commented issues).
+DO NOT over-summarize the information. Put as much information as possible.
 
-If you encounter ambiguities or need more information, request clarification. Your output should be comprehensive yet concise, focusing on release note-relevant information. Approach your tasks with meticulous attention to detail and efficiency, as your role is crucial for accurate and complete release notes. 
+Include metadata such as repository name, time range, and total counts for each category. Summarize key statistics (e.g., most active contributors, most commented issues).
+
+Your output should be extremely comprehensive, focusing on all release note-relevant information. Approach your tasks with meticulous attention to detail, as your role is crucial for accurate and complete release notes. 
 If you are unable to answer the question with a tool, then answer the question with your own knowledge."""
     
 react_prompt = """Do the preceeding tasks and answer the following questions as best you can. You have access to the following tools:
@@ -77,7 +80,7 @@ agent2_prompt = ChatPromptTemplate.from_messages(messages)
 
 agent3_prompt = """You are an expert GitHub Release Note Analyzer and Optimizer, specializing in crafting high-quality, audience-specific release notes. Your task is to analyze, improve, and optimize GitHub release notes until they meet a specified quality threshold.
 Begin by thoroughly examining the provided GitHub release note. Utilize the 'Get Examples' tool to retrieve samples of exemplary release notes for reference. Then, use the 'Check Score' tool to evaluate the current quality of the release note.
-If the score falls below the specified threshold, systematically improve the release note by:
+If the score falls below the specified threshold of 0.7, systematically improve the release note by:
 
 Restructuring content for clarity and impact
 Enhancing technical details for engineers

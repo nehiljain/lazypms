@@ -8,7 +8,6 @@ from tools import slack_api_tool, github_release_data_tool, release_summary_scor
 from context import slack_communication_guidelines, audience_specific_examples, release_notes_best_practices_tool, internal_review_guidelines, system_architecture_docs
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
-
 from langchain_fireworks import ChatFireworks, FireworksEmbeddings
 
 # Setup logging
@@ -32,7 +31,7 @@ class Config:
 
 # Initialize the language model
 anth_api_key = os.environ['ANTHROPIC_API_KEY']
-llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-5-sonnet-20240620', max_tokens_to_sample=4000)
+llm = ChatAnthropic(temperature=0.1, default_headers={"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"}, anthropic_api_key=anth_api_key, model='claude-3-5-sonnet-20240620', max_tokens_to_sample=6000)
 # llm = ChatFireworks(
 #     api_key=os.getenv("FIREWORKS_API_KEY"),
 #     model="accounts/fireworks/models/llama-v3p1-70b-instruct"
@@ -54,9 +53,9 @@ agent5 = create_react_agent(llm, agent5_tools, agent5_prompt)
 
 # Create agent executors
 agent1_executor = AgentExecutor(agent=agent1, tools=agent1_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
-agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
-agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=5)
-agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
+agent2_executor = AgentExecutor(agent=agent2, tools=agent2_tools, verbose=True, handle_parsing_errors=True, max_iterations=5)
+agent3_executor = AgentExecutor(agent=agent3, tools=agent3_tools, verbose=True, handle_parsing_errors=True, max_iterations=7)
+agent4_executor = AgentExecutor(agent=agent4, tools=agent4_tools, verbose=True, handle_parsing_errors=True, max_iterations=3)
 agent5_executor = AgentExecutor(agent=agent5, tools=agent5_tools, verbose=True, handle_parsing_errors=True, max_iterations=2)
 
 # Define the StateGraph
@@ -87,6 +86,7 @@ def github_data_retrieval_node(state: ReleaseNoteState) -> Dict[str, Any]:
         if state["parsed_request"] is None:
             raise ValueError("No parsed request available")
         result = agent2_executor.invoke({"input": state["parsed_request"]})
+        print(result)
         return {**state, "github_data": result["output"]}
     except Exception as e:
         logger.error(f"Error in github_data_retrieval_node: {str(e)}")
@@ -170,6 +170,13 @@ workflow.set_entry_point("github_data_retrieval")
 # Compile the graph
 graph = workflow.compile()
 
+from IPython.display import Image, display
+from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeStyles
+
+png1 = Image(graph.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API,))
+with open("graph_api.png", "wb") as png:
+    png.write(png1.data)
+
 # Main program
 def run_agent():
     initial_state: ReleaseNoteState = {
@@ -199,5 +206,5 @@ def run_agent():
     except Exception as e:
         logger.error(f"Error in main loop: {str(e)}")
     
-if __name__ == "__main__":
-    run_agent()
+# if __name__ == "__main__":
+#     run_agent()
