@@ -4,6 +4,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
 import logging
+import agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -85,11 +86,13 @@ def handle_app_mention_events(body, say, logger):
                 ]
             }
         ]
-        say(blocks=blocks)        
+        say(blocks=blocks)
     else:
         say(f"Hey there <@{user}>!")
 
 # Listens to button clicks
+
+release_notes = ""
 
 @app.action("suggest_edits_please")
 def handle_suggest_edits(ack, body, say, logger):
@@ -107,6 +110,57 @@ def handle_suggest_edits(ack, body, say, logger):
     ])
 
     # Kick off the thing
+    global release_notes
+    release_notes = agent.run_agent()
+
+    say(blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Okay, I'm back! Here's my first draft of what I think would be a better version of the release notes for <https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|your latest release (langchain-openai==0.1.21)>:"
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": release_notes
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Would you like to make any changes to this or shall I go ahead and make those changes for you?"
+            }
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "emoji": True,
+                        "text": "Yes, please!"
+                    },
+                    "value": "accepted",
+                    "action_id": "accepted"
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "emoji": True,
+                        "text": "Not right now, thanks"
+                    },
+                    "value": "rejected",
+                    "action_id": "rejected"
+                }
+            ]
+        }
+    ])
 
 @app.action("no_thanks_edits")
 def handle_no_thanks_edits(ack, body, say, logger):
@@ -129,10 +183,12 @@ def handle_option_1(ack, body, say, logger):
     user = body['user']['id']
     
     try:
+        global release_notes
+
         release = get_release()
         release_id = release['id']
-        updated_release = update_release(release_id, 'hello world')
-        say(f"<@{user}> accepted the request. Updated release notes to: {updated_release['body']}")
+        update_release(release_id, release_notes)
+        say(f"Great, I've updated <https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-openai%3D%3D0.1.21|the release notes (langchain-openai==0.1.21)> as described above")
     except Exception as e:
         logger.error(f"Failed to update release notes: {e}")
         say(f"<@{user}> there was an error updating the release notes.")
