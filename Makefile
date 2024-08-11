@@ -2,7 +2,7 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = aug-11-agents-hackathon
+PROJECT_NAME = lazypms
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python3
 
