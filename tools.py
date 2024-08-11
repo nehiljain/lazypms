@@ -115,6 +115,7 @@ from github import Github, GithubException
 from datetime import datetime, timezone
 import json
 import re
+import requests
 
 class GitHubReleaseInput(BaseModel):
     input: str = Field(description="Requires a JSON string containing 'release_id'. Example: {\"release_id\": \"langchain-core==1.0.0\"}")
@@ -175,6 +176,7 @@ def github_release_data_tool(input: str) -> str:
                         "title": issue.title,
                         "state": issue.state,
                         "author": issue.user.login,
+                        "diff": requests.get(issue.pull_request.diff_url).text,
                         "created_at": issue.created_at.isoformat(),
                     })
                 else:
