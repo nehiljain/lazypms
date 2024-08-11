@@ -9,7 +9,7 @@ from context import slack_communication_guidelines, audience_specific_examples, 
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
 
-from langchain_fireworks import llm as FireworksLLM
+from langchain_fireworks import ChatFireworks
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,7 +21,7 @@ load_dotenv()
 # Configuration
 class Config:
     RELEASE_NOTE_KEYWORDS = ["release notes", "changelog", "update", "new features"]
-    REQUIRED_ENV_VARS = ['anth_apikey', 'SLACK_API_TOKEN', 'GITHUB_API_TOKEN']
+    REQUIRED_ENV_VARS = ['GITHUB_PA_TOKEN', 'SLACK_APP_TOKEN',"SLACK_BOT_TOKEN", "SLACK_SIGNING_SECRET", "FIREWORKS_API_KEY"]
 
 def validate_env_vars():
     for var in Config.REQUIRED_ENV_VARS:
@@ -33,13 +33,13 @@ validate_env_vars()
 # Initialize the language model
 # anth_api_key = os.environ['anth_apikey']
 # llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
-llm = FireworksLLM(
+llm = ChatFireworks(
     api_key=os.getenv("FIREWORKS_API_KEY"),
     model="accounts/fireworks/models/llama-v3p1-8b-instruct"
 )
 
 # Define tools for each agent
-agent1_tools = [slack_api_tool, slack_communication_guidelines]
+agent1_tools = []
 agent2_tools = [github_data_tool]
 agent3_tools = [github_analyzer_tool, audience_specific_examples, release_notes_best_practices]
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
@@ -186,13 +186,14 @@ def main():
     while True:
         try:
             # new_messages = slack_api_tool.get_new_messages()
-            new_messages = ["Please generate release notes for the latest release https://github.com/langchain-ai/langchain/releases/tag/langchain-core%3D%3D0.2.0"]
+            new_messages = ["Please generate release notes for the latest release https://github.com/nehiljain/langchain-by-lazypms/releases/tag/langchain-core%3D%3D0.2.0"]
             for message in new_messages:
                 if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
                     initial_state["input"] = message
                     for step in graph.stream(initial_state):
                         print(f"Step: {step}")
                         if "final_release_notes" in step and step["final_release_notes"]:
+                            print(step["final_release_notes"])
                             slack_api_tool.send_message(step["final_release_notes"])
         except Exception as e:
             logger.error(f"Error in main loop: {str(e)}")
