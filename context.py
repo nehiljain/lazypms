@@ -4,20 +4,11 @@ from langchain.tools.retriever import create_retriever_tool
 from langchain.vectorstores.chroma import Chroma
 import chromadb
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_fireworks import FireworksEmbeddings
 
-modelPath = "BAAI/bge-small-en-v1.5" 
-model_kwargs = {'device':'cpu','trust_remote_code':'True'}
-encode_kwargs = {'normalize_embeddings': True}
-
-# Initialize an instance of HuggingFaceEmbeddings with the specified parameters
-embeddings = HuggingFaceEmbeddings(
-    model_name=modelPath,     # Provide the pre-trained model's path
-    model_kwargs=model_kwargs, # Pass the model configuration options
-    encode_kwargs=encode_kwargs # Pass the encoding options
-)
+embeddings = FireworksEmbeddings(model="nomic-ai/nomic-embed-text-v1.5")
 
 chroma = chromadb.PersistentClient(path="./chroma_db")
-
 
 from chromadb.api import AdminAPI, ClientAPI
 def collection_exists(client:ClientAPI, collection_name):
