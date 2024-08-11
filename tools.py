@@ -128,9 +128,8 @@ def github_release_data_tool(input: str) -> str:
         input_data = json.loads(input)
         repo_name = input_data['repo']
         release_id = input_data['release_id']
-        access_token = input_data['access_token']
 
-        g = Github(access_token)
+        g = Github(GITHUB_PA_TOKEN)
 
         #real repo
         repo = g.get_repo('langchain-ai/langchain')
