@@ -131,7 +131,12 @@ def github_release_data_tool(input: str) -> str:
         access_token = input_data['access_token']
 
         g = Github(access_token)
-        repo = g.get_repo(repo_name)
+
+        #real repo
+        repo = g.get_repo('langchain-ai/langchain')
+
+        #fake repo
+        fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
 
         # Fetch the specific release
         release = repo.get_release(release_id)
@@ -163,7 +168,6 @@ def github_release_data_tool(input: str) -> str:
                         "state": issue.state,
                         "author": issue.user.login,
                         "created_at": issue.created_at.isoformat(),
-                        "merged_at": issue.pull_request.merged_at.isoformat() if issue.pull_request.merged_at else None
                     })
                 else:
                     data["issues"].append({
@@ -214,11 +218,15 @@ def github_analyzer_tool(input: str) -> str:
         days = input_data.get('days', 30)
 
         g = Github(GITHUB_PA_TOKEN)  # Replace with your actual GitHub API token
-        repository = g.get_repo(repo)
+        #real repo
+        repo = g.get_repo('langchain-ai/langchain')
+
+        #fake repo
+        fake_repo = g.get_repo('nehiljain/langchain-by-lazypms')
         
         # Fetch recent commits
         since_date = datetime.now() - timedelta(days=days)
-        commits = repository.get_commits(since=since_date)
+        commits = repo.get_commits(since=since_date)
         
         # Analyze commits and categorize changes
         features = []
@@ -236,7 +244,7 @@ def github_analyzer_tool(input: str) -> str:
         
         # Prepare structured output
         analysis = {
-            "repository": repo,
+            "repo": repo,
             "analysis_period": f"Last {days} days",
             "features": features,
             "bug_fixes": bug_fixes,
