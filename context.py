@@ -18,13 +18,15 @@ embeddings = HuggingFaceEmbeddings(
 
 chroma = chromadb.PersistentClient(path="./chroma_db")
 
+
 from chromadb.api import AdminAPI, ClientAPI
 def collection_exists(client:ClientAPI, collection_name):
+    print(collection_name)
     collections = client.list_collections()
+    print(collections)
     filtered_collection = filter(lambda collection: collection.name == collection_name, collections)
     found = any(filtered_collection)
     return found
-
 
 
 from langchain_community.document_loaders import WebBaseLoader
@@ -64,10 +66,10 @@ def load_slack_communication_guidelines(chroma, embeddings):
                 documents=[doc.page_content]
             )
 
-load_slack_communication_guidelines(chroma, embeddings)
+# load_slack_communication_guidelines(chroma, embeddings)
 
 slack_communication_guidelines = create_retriever_tool(
-    Chroma(client=chroma, collection_name="langchain_tools", embedding_function=embeddings).as_retriever(),
+    Chroma(client=chroma, collection_name="slack_communication_guidelines", embedding_function=embeddings).as_retriever(),
     "slack_communication_guidelines",
     "Search for guidelines on appropriate channels, tone, and format for Slack communications within the organization. Use this tool for any questions about Slack communication etiquette and best practices."
 )
@@ -91,7 +93,7 @@ urls: List[str] = [
 ]
 
 def load_audience_specific_examples(chroma, embeddings):
-    if not collection_exists(chroma, "langchain_tools"):
+    if not collection_exists(chroma, "audience_specific_examples"):
         try:
             loader = WebBaseLoader(urls)
             data = loader.load()
@@ -100,7 +102,7 @@ def load_audience_specific_examples(chroma, embeddings):
                 chunk_size=1000, chunk_overlap=200
             ).split_documents(data)
 
-            collection = chroma.create_collection("langchain_tools")
+            collection = chroma.create_collection("audience_specific_examples")
             for doc in documents:
                 emb = embeddings.embed_documents([doc.page_content])
                 metadata = doc.metadata.copy()
@@ -114,12 +116,12 @@ def load_audience_specific_examples(chroma, embeddings):
         except Exception as e:
             print(f"Error loading documents: {e}")
 
-load_audience_specific_examples(chroma, embeddings)
+# load_audience_specific_examples(chroma, embeddings)
 
 audience_specific_examples = create_retriever_tool(
     Chroma(
         client=chroma,
-        collection_name="langchain_tools",
+        collection_name="audience_specific_examples",
         embedding_function=embeddings
     ).as_retriever(),
     "audience_specific_examples",
@@ -133,13 +135,6 @@ from langchain.tools.retriever import create_retriever_tool
 from langchain.vectorstores import Chroma
 import chromadb
 import uuid
-
-chroma = chromadb.PersistentClient(path="./chroma_db")
-
-def collection_exists(client, collection_name):
-    collections = client.list_collections()
-    filtered_collection = filter(lambda collection: collection.name == collection_name, collections)
-    return any(filtered_collection)
 
 urls = [
     "https://www.aha.io/roadmapping/guide/launch/how-to-write-excellent-release-notes",
@@ -171,16 +166,16 @@ def load_release_notes_best_practices(chroma, embeddings):
         except Exception as e:
             print(f"Error loading release notes best practices: {e}")
 
-load_release_notes_best_practices(chroma, embeddings)
+# load_release_notes_best_practices(chroma, embeddings)
 
 release_notes_best_practices = Chroma(
     client=chroma,
-    collection_name="langchain_tools",
+    collection_name="internal_review_guidelines",
     embedding_function=embeddings,
-)
+).as_retriever()
 
 release_notes_best_practices_tool = create_retriever_tool(
-    release_notes_best_practices.as_retriever(),
+    release_notes_best_practices,
     "release_notes_best_practices",
     "Search for best practices in writing effective release notes. For any questions about release notes principles and guidelines, you must use this tool!"
 )
@@ -190,9 +185,6 @@ import uuid
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
-from langchain.vectorstores.chroma import Chroma
-
-COLLECTION_NAME = "langchain_tools"
 
 urls = [
     "https://bizfluent.com/how-10002395-conduct-organizational-review.html",
@@ -204,7 +196,7 @@ urls = [
     "https://www.utrgv.edu/curriculum-assessment/_files/022024/apr-process.pdf"
 ]
 
-def load_internal_review_guidelines(chroma, embeddings, collection_name=COLLECTION_NAME):
+def load_internal_review_guidelines(chroma, embeddings, collection_name="internal_review_guidelines"):
     if not collection_exists(chroma, collection_name):
         try:
             loader = WebBaseLoader(urls)
@@ -228,22 +220,19 @@ def load_internal_review_guidelines(chroma, embeddings, collection_name=COLLECTI
         print(f"Collection {collection_name} already exists. Skipping document loading.")
     return True
 
-if load_internal_review_guidelines(chroma, embeddings):
-    chroma_retriever = Chroma(
-        client=chroma,
-        collection_name=COLLECTION_NAME,
-        embedding_function=embeddings,
-    ).as_retriever()
+# load_internal_review_guidelines(chroma, embeddings):
 
-    internal_review_guidelines = create_retriever_tool(
-        chroma_retriever,
-        "internal_review_guidelines",
-        "Search for information about organizational review procedures and feedback incorporation methods. Use this tool for any questions related to internal review guidelines, feedback processes, or evaluation procedures."
-    )
-else:
-    print("Failed to load internal review guidelines. The retriever tool is not available.")
-    internal_review_guidelines = None
+chroma_retriever = Chroma(
+    client=chroma,
+    collection_name="internal_review_guidelines",
+    embedding_function=embeddings,
+).as_retriever()
 
+internal_review_guidelines = create_retriever_tool(
+    chroma_retriever,
+    "internal_review_guidelines",
+    "Search for information about organizational review procedures and feedback incorporation methods. Use this tool for any questions related to internal review guidelines, feedback processes, or evaluation procedures."
+)
 
 from langchain_community.document_loaders.web_base import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -251,8 +240,6 @@ from langchain.tools.retriever import create_retriever_tool
 from langchain.vectorstores.chroma import Chroma
 import chromadb
 import uuid
-
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
 urls = [
     "https://www.bp-3.com/blog/process-management-architecture-overview-of-methods-features-and-capabilities",
@@ -267,7 +254,7 @@ urls = [
 ]
 
 def load_system_architecture_docs(chroma_client, embeddings):
-    collection_name = "langchain_tools"
+    collection_name = "system_architecture_search"
     if not collection_exists(chroma_client, collection_name):
         loader = WebBaseLoader(urls)
         data = loader.load()
@@ -283,11 +270,11 @@ def load_system_architecture_docs(chroma_client, embeddings):
                 ids=[str(uuid.uuid1())], embeddings=emb, metadatas=doc.metadata, documents=[doc.page_content]
             )
 
-load_system_architecture_docs(chroma_client, embeddings)
+# load_system_architecture_docs(chroma, embeddings)
 
 system_architecture_vectorstore = Chroma(
-    client=chroma_client,
-    collection_name="langchain_tools",
+    client=chroma,
+    collection_name="system_architecture_search",
     embedding_function=embeddings,
 )
 

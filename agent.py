@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_anthropic import ChatAnthropic
 from tools import slack_api_tool, github_data_tool, github_analyzer_tool, human_feedback_interface, process_analytics_optimizer, exception_handler_model_updater
-from context import slack_communication_guidelines, audience_specific_examples, release_notes_best_practices, internal_review_guidelines, system_architecture_docs
+from context import slack_communication_guidelines, audience_specific_examples, release_notes_best_practices_tool, internal_review_guidelines, system_architecture_docs
 from prompts import agent1_prompt, agent2_prompt, agent3_prompt, agent4_prompt, agent5_prompt
 from langgraph.graph import StateGraph, END
 
@@ -21,21 +21,21 @@ class Config:
     RELEASE_NOTE_KEYWORDS = ["release notes", "changelog", "update", "new features"]
     REQUIRED_ENV_VARS = ['anth_apikey', 'SLACK_API_TOKEN', 'GITHUB_API_TOKEN']
 
-def validate_env_vars():
-    for var in Config.REQUIRED_ENV_VARS:
-        if var not in os.environ:
-            raise EnvironmentError(f"Missing required environment variable: {var}")
+# def validate_env_vars():
+#     for var in Config.REQUIRED_ENV_VARS:
+#         if var not in os.environ:
+#             raise EnvironmentError(f"Missing required environment variable: {var}")
 
-validate_env_vars()
+# validate_env_vars()
 
 # Initialize the language model
-anth_api_key = os.environ['anth_apikey']
+anth_api_key = "" #os.environ['anth_apikey']
 llm = ChatAnthropic(temperature=0.3, anthropic_api_key=anth_api_key, model='claude-3-opus-20240229')
 
 # Define tools for each agent
 agent1_tools = [slack_api_tool, slack_communication_guidelines]
 agent2_tools = [github_data_tool]
-agent3_tools = [github_analyzer_tool, audience_specific_examples, release_notes_best_practices]
+agent3_tools = [github_analyzer_tool, audience_specific_examples, release_notes_best_practices_tool]
 agent4_tools = [human_feedback_interface, internal_review_guidelines]
 agent5_tools = [process_analytics_optimizer, exception_handler_model_updater, system_architecture_docs]
 
@@ -163,32 +163,47 @@ workflow.set_entry_point("slack_interaction")
 # Compile the graph
 graph = workflow.compile()
 
-# Main program
-def main():
-    initial_state: ReleaseNoteState = {
-        "input": "",
-        "parsed_request": None,
-        "github_data": None,
-        "generated_content": None,
-        "human_feedback": None,
-        "final_release_notes": None,
-        "process_feedback": None,
-        "exception_reports": [],
-        "process_metrics": {}
-    }
+from IPython.display import Image, display
+from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeStyles
 
-    while True:
-        try:
-            new_messages = slack_api_tool.get_new_messages()
-            for message in new_messages:
-                if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
-                    initial_state["input"] = message
-                    for step in graph.stream(initial_state):
-                        print(f"Step: {step}")
-                        if "final_release_notes" in step and step["final_release_notes"]:
-                            slack_api_tool.send_message(step["final_release_notes"])
-        except Exception as e:
-            logger.error(f"Error in main loop: {str(e)}")
+# display(
+#     Image(
+#         graph.get_graph().draw_mermaid_png(
+#             draw_method=MermaidDrawMethod.API,
+#         )
+#     )
+# )
+
+png1 = Image(graph.get_graph().draw_mermaid_png())
+with open("graph.png", "wb") as png:
+    png.write(png1.data)
+
+# # Main program
+# def main():
+#     initial_state: ReleaseNoteState = {
+#         "input": "",
+#         "parsed_request": None,
+#         "github_data": None,
+#         "generated_content": None,
+#         "human_feedback": None,
+#         "final_release_notes": None,
+#         "process_feedback": None,
+#         "exception_reports": [],
+#         "process_metrics": {}
+#     }
+
+#     while True:
+#         try:
+#             new_messages = slack_api_tool.get_new_messages()
+#             for message in new_messages:
+#                 if any(keyword in message.lower() for keyword in Config.RELEASE_NOTE_KEYWORDS):
+#                     initial_state["input"] = message
+#                     for step in graph.stream(initial_state):
+#                         print(f"Step: {step}")
+#                         if "final_release_notes" in step and step["final_release_notes"]:
+#                             slack_api_tool.send_message(step["final_release_notes"])
+#         except Exception as e:
+#             logger.error(f"Error in main loop: {str(e)}")
         
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

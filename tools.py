@@ -13,11 +13,11 @@ import os
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_APP_TOKEN = os.environ.get("SLACK_APP_TOKEN")
 
-if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
-    raise ValueError("SLACK_BOT_TOKEN and SLACK_APP_TOKEN must be set in environment variables")
+# if not SLACK_BOT_TOKEN or not SLACK_APP_TOKEN:
+#     raise ValueError("SLACK_BOT_TOKEN and SLACK_APP_TOKEN must be set in environment variables")
 
-slack_client = WebClient(token=SLACK_BOT_TOKEN)
-app = App(token=SLACK_BOT_TOKEN)
+slack_client = None #WebClient(token=SLACK_BOT_TOKEN)
+app = None #App(token=SLACK_BOT_TOKEN)
 
 class SlackAPIInput(BaseModel):
     input: str = Field(description='A JSON string containing the operation and its parameters. Example: {"operation": "send_message", "channel": "C1234567890", "message": "Hello, world!"}')
@@ -81,30 +81,30 @@ def get_channel_history(channel: str, limit: int = 100) -> str:
     except SlackApiError as e:
         return f"Error getting channel history: {str(e)}"
 
-@app.event("message")
-def handle_message_events(body, logger):
-    logger.info(body)
-    message = body["event"]["text"]
-    channel = body["event"]["channel"]
-    user = body["event"]["user"]
+# @app.event("message")
+# def handle_message_events(body, logger):
+#     logger.info(body)
+#     message = body["event"]["text"]
+#     channel = body["event"]["channel"]
+#     user = body["event"]["user"]
     
-    # Process the message here
-    # For example, you could respond to specific keywords
-    if "hello" in message.lower():
-        send_message(channel, f"Hello <@{user}>! How can I assist you today?")
+#     # Process the message here
+#     # For example, you could respond to specific keywords
+#     if "hello" in message.lower():
+#         send_message(channel, f"Hello <@{user}>! How can I assist you today?")
 
-def start_monitoring():
-    def run_socket_mode():
-        handler = SocketModeHandler(app, SLACK_APP_TOKEN)
-        handler.start()
+# def start_monitoring():
+#     def run_socket_mode():
+#         handler = SocketModeHandler(app, SLACK_APP_TOKEN)
+#         handler.start()
 
-    # Start the Socket Mode handler in a separate thread
-    monitoring_thread = threading.Thread(target=run_socket_mode, daemon=True)
-    monitoring_thread.start()
-    return "Real-time monitoring started"
+#     # Start the Socket Mode handler in a separate thread
+#     monitoring_thread = threading.Thread(target=run_socket_mode, daemon=True)
+#     monitoring_thread.start()
+#     return "Real-time monitoring started"
 
-# Initialize monitoring on import
-start_monitoring()
+# # Initialize monitoring on import
+# start_monitoring()
 
 
 from typing import Optional, Type
